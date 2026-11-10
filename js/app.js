@@ -146,9 +146,12 @@ function recognizeOnce(onResult, onErr) {
   try {
     const r = new SRClass();
     r.lang = 'en-US'; r.interimResults = false; r.maxAlternatives = 1;
-    r.onresult = e => onResult(e.results[0][0].transcript);
-    r.onerror = e => onErr(e);
+    let settled = false;
+    r.onresult = e => { if (!settled) { settled = true; clearTimeout(timer); onResult(e.results[0][0].transcript); } };
+    r.onerror = e => { if (!settled) { settled = true; clearTimeout(timer); onErr(e); } };
     r.onend = () => { };
+    // 超时保护：12 秒无结果视为服务不可达（多为识别服务网络不通）
+    const timer = setTimeout(() => { if (!settled) { settled = true; try { r.abort(); } catch (e) { } onErr({ error: 'network' }); } }, 12000);
     r.start();
     return r;
   } catch (e) { onErr({ error: 'start-failed' }); return null; }
@@ -1049,18 +1052,26 @@ function speakingTopic(id) {
     toast(`训练完成！本话题平均 ${best} 分`); renderSpeaking();
   };
 }
-function speakEvaluate(t, i) {
-  const target = t.sentences[i].en;
-  const resEl = $(`[data-spk-result="${i}"]`);
-  if (!SRClass) {
-    // 自评模式降级
-    resEl.innerHTML = `<div class="explain-box">🎙 语音识别不可用，请听示范后自评：</div>
+// 语音识别不可用标记：网络错误后持久化，后续直接走自评模式，避免反复等待超时
+let srUnavailable = !!(S.speaking && S.speaking.srUnavailable);
+function selfEvalFallback(resEl, t, i, note) {
+  resEl.innerHTML = `<div class="explain-box">🎙 ${note || '语音识别不可用'}，请听示范后自评：</div>
       <div class="btn-row mt8">
         <button class="btn sm success" data-self="95">读得很好</button>
         <button class="btn sm warn" data-self="70">基本流利</button>
         <button class="btn sm danger" data-self="45">还需练习</button>
-      </div>`;
-    $$('[data-self]', resEl).forEach(b => b.onclick = () => saveSpeakScore(t, i, +b.dataset.self));
+      </div>
+      ${srUnavailable ? '<button class="btn ghost sm mt8" data-sr-retry="1">🔄 网络环境变化？重试在线识别</button>' : ''}`;
+  $$('[data-self]', resEl).forEach(b => b.onclick = () => saveSpeakScore(t, i, +b.dataset.self));
+  const retry = $('[data-sr-retry]', resEl);
+  if (retry) retry.onclick = () => { S.speaking.srUnavailable = false; save(); srUnavailable = false; speakEvaluate(t, i); };
+}
+function speakEvaluate(t, i) {
+  const target = t.sentences[i].en;
+  const resEl = $(`[data-spk-result="${i}"]`);
+  if (!SRClass || srUnavailable) {
+    // 自评模式降级
+    selfEvalFallback(resEl, t, i, srUnavailable ? '在线识别服务不可用' : '当前浏览器不支持语音识别');
     return;
   }
   resEl.innerHTML = `<p class="muted">🎙 正在聆听，请清晰朗读目标句子……</p>`;
@@ -1075,8 +1086,13 @@ function speakEvaluate(t, i) {
     </div>`;
     saveSpeakScore(t, i, score);
   }, err => {
+    if (err.error === 'network' || err.error === 'service-not-allowed') {
+      srUnavailable = true; S.speaking.srUnavailable = true; save();
+      selfEvalFallback(resEl, t, i, '在线识别服务连接失败（Chrome 语音识别需访问 Google 服务器，国内网络无法直连，与你的网络无关）');
+      return;
+    }
     const msg = err.error === 'not-allowed' ? '麦克风权限被拒绝，请在浏览器设置中允许麦克风' :
-      err.error === 'no-speech' ? '未检测到声音，请重试' : '识别失败，请重试（需联网）';
+      err.error === 'no-speech' ? '未检测到声音，请重试' : '识别失败，请重试';
     resEl.innerHTML = `<p class="muted">❌ ${msg}</p>`;
   });
 }
