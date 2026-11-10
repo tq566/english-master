@@ -1,4 +1,4 @@
-// 听力素材库：3 档难度 × 日常/学术/新闻场景，共 15 篇
+// 听力素材库：3 档难度 × 日常/学术/新闻场景，共 30 篇
 window.LISTENING_BANK = [
   {
     id: "lis-01",
@@ -669,6 +669,674 @@ window.LISTENING_BANK = [
         options: ["A new agreement text", "Detailed national plans", "A list of financial donors", "The chair's resignation"],
         answer: 1,
         explain: "新闻说各国政府预计将在内罗毕会议上提交详细的国家方案（detailed national plans）。"
+      }
+    ]
+  }
+  ,
+  {
+    id: "lis-16",
+    title: "Checking In at a Hotel",
+    level: 1,
+    scene: "日常对话",
+    intro: "客人在酒店前台办理入住",
+    lines: [
+      { speaker: "Receptionist", en: "Good evening! Welcome to the Seaview Hotel. Do you have a reservation?", zh: "晚上好！欢迎光临海景酒店。您有预订吗？" },
+      { speaker: "Guest", en: "Yes, I booked a double room for two nights. The name is Carter.", zh: "是的，我订了两晚的双人房，订房人姓卡特。" },
+      { speaker: "Receptionist", en: "Let me check... Yes, here it is. A double room with a sea view, from Tuesday to Thursday.", zh: "我查一下……有了。带海景的双人房，周二入住，周四退房。" },
+      { speaker: "Guest", en: "That's right. What time is breakfast tomorrow morning?", zh: "没错。明天早上早餐几点开始？" },
+      { speaker: "Receptionist", en: "Breakfast is from seven to ten, in the dining room on the first floor.", zh: "早餐时间是七点到十点，在一楼餐厅。" },
+      { speaker: "Guest", en: "Great. Is the Wi-Fi free in the rooms?", zh: "太好了。房间里的无线网络是免费的吗？" },
+      { speaker: "Receptionist", en: "Yes, it's free. The password is on the card next to the phone.", zh: "是的，免费。密码就在电话旁边的卡片上。" },
+      { speaker: "Receptionist", en: "Here's your key card. Room 508, on the fifth floor. The lift is just around the corner.", zh: "这是您的房卡。508 房，在五楼。电梯就在拐角处。" },
+      { speaker: "Guest", en: "Thank you. Oh, could I also have a wake-up call at six thirty?", zh: "谢谢。哦，我还可以预约六点半的叫醒服务吗？" },
+      { speaker: "Receptionist", en: "Of course. Enjoy your stay!", zh: "当然可以。祝您入住愉快！" }
+    ],
+    keyPhrases: [
+      { en: "make a reservation", zh: "预订" },
+      { en: "double room", zh: "双人房" },
+      { en: "key card", zh: "房卡" },
+      { en: "wake-up call", zh: "叫醒服务" }
+    ],
+    questions: [
+      {
+        q: "How many nights will the guest stay?",
+        options: ["One night", "Two nights", "Three nights", "Four nights"],
+        answer: 1,
+        explain: "客人订了 \"a double room for two nights\"，共两晚（周二入住、周四退房）。"
+      },
+      {
+        q: "Where is the dining room?",
+        options: ["On the fifth floor", "Next to the lift", "On the first floor", "In room 508"],
+        answer: 2,
+        explain: "前台说早餐在 \"the dining room on the first floor\"，餐厅在一楼。"
+      },
+      {
+        q: "What extra service does the guest ask for?",
+        options: ["A sea-view room", "A wake-up call at 6:30", "Free breakfast", "A larger room"],
+        answer: 1,
+        explain: "客人最后请求 \"a wake-up call at six thirty\"，即六点半的叫醒服务。"
+      }
+    ]
+  },
+  {
+    id: "lis-17",
+    title: "Buying Tickets at the Cinema",
+    level: 1,
+    scene: "日常对话",
+    intro: "顾客在电影院售票处购票",
+    lines: [
+      { speaker: "Clerk", en: "Good evening! Which film would you like to see tonight?", zh: "晚上好！您今晚想看哪部电影？" },
+      { speaker: "Customer", en: "We'd like two tickets for Space Journey, please. Is the seven o'clock showing still on?", zh: "我们要买两张《太空之旅》的票。七点那场还在放映吗？" },
+      { speaker: "Clerk", en: "It is, but it's almost full. Only the front rows are left.", zh: "还在放映，但座位几乎满了，只剩下最前排。" },
+      { speaker: "Customer", en: "Oh. What about a later showing?", zh: "哦，那晚一点的场次呢？" },
+      { speaker: "Clerk", en: "There's one at nine fifteen, and we still have good seats in the middle.", zh: "九点十五有一场，中间还有不错的座位。" },
+      { speaker: "Customer", en: "That works. Two tickets for the nine fifteen showing, please.", zh: "可以，就买两张九点十五那场的票。" },
+      { speaker: "Clerk", en: "Would you like popcorn or drinks with that? There's a set price this week — cheaper than buying them separately.", zh: "要配点爆米花或饮料吗？本周有套餐价，比单买便宜。" },
+      { speaker: "Customer", en: "Good idea. One large popcorn and two lemonades, please.", zh: "好主意，那就来一大份爆米花和两杯柠檬水。" },
+      { speaker: "Clerk", en: "That comes to twenty-four dollars in total. Screen Four is upstairs on the left.", zh: "一共二十四美元。四号放映厅在楼上左侧。" },
+      { speaker: "Customer", en: "Thanks a lot! We'll be back at nine.", zh: "非常感谢！我们九点过来。" }
+    ],
+    keyPhrases: [
+      { en: "showing", zh: "（电影的）场次" },
+      { en: "almost full", zh: "几乎满座" },
+      { en: "set price", zh: "套餐价" },
+      { en: "come to", zh: "合计（金额）" }
+    ],
+    questions: [
+      {
+        q: "Why don't they watch the seven o'clock showing?",
+        options: ["It has stopped showing", "Only front-row seats are left", "The tickets are too expensive", "The film is not suitable for children"],
+        answer: 1,
+        explain: "售票员说七点场次 \"almost full. Only the front rows are left\"，只剩最前排座位。"
+      },
+      {
+        q: "What time is their chosen showing?",
+        options: ["7:00", "8:45", "9:15", "9:50"],
+        answer: 2,
+        explain: "他们最终买了九点十五（nine fifteen）那场的两张票。"
+      },
+      {
+        q: "What do they buy to eat and drink?",
+        options: ["One large popcorn and two lemonades", "Two popcorns and one lemonade", "One small popcorn and two colas", "Nothing at all"],
+        answer: 0,
+        explain: "顾客点了 \"One large popcorn and two lemonades\"，即一大份爆米花和两杯柠檬水。"
+      }
+    ]
+  },
+  {
+    id: "lis-18",
+    title: "Explaining a Missed Class to the Teacher",
+    level: 1,
+    scene: "学术场景",
+    intro: "学生因病缺课后向老师询问补课安排",
+    lines: [
+      { speaker: "Student", en: "Excuse me, Ms. Reed. Do you have a minute? I was absent on Tuesday.", zh: "打扰一下，里德老师。您有空吗？我周二缺课了。" },
+      { speaker: "Teacher", en: "Oh yes, Tom. Were you ill?", zh: "哦，是的，汤姆。你生病了吗？" },
+      { speaker: "Student", en: "I had a bad stomachache, so I stayed at home. Could you tell me what we did in class?", zh: "我胃疼得厉害，所以待在家里。您能告诉我课上讲了什么吗？" },
+      { speaker: "Teacher", en: "We finished Unit Four and started the writing task. I also handed out a worksheet with the instructions.", zh: "我们讲完了第四单元，并布置了写作任务。我还发了一张写有要求的练习纸。" },
+      { speaker: "Student", en: "I see. Could I copy the notes from a classmate?", zh: "明白了。我可以找同学抄一下笔记吗？" },
+      { speaker: "Teacher", en: "Of course. Maria's notes are usually very clear. You can also watch the class recording online.", zh: "当然可以。玛丽亚的笔记通常很清楚。你也可以在网上看课堂录像。" },
+      { speaker: "Student", en: "I forgot about the recording. That's really helpful.", zh: "我都忘了还有课堂录像，这可太有用了。" },
+      { speaker: "Teacher", en: "The writing task is due next Monday, so you still have time. But don't leave it until Sunday night.", zh: "写作任务下周一截止，所以你还有时间，但别拖到周日晚上才动笔。" },
+      { speaker: "Student", en: "I won't. One more question — is Friday's quiz still on?", zh: "不会的。还有一个问题——周五的小测验照常进行吗？" },
+      { speaker: "Teacher", en: "Yes, it does. It covers Units Three and Four. Come and see me if anything is unclear.", zh: "是的，照常进行。范围是第三和第四单元。有不明白的地方随时来问我。" }
+    ],
+    keyPhrases: [
+      { en: "be absent", zh: "缺席" },
+      { en: "hand out", zh: "分发" },
+      { en: "be due", zh: "（作业）截止" },
+      { en: "cover Units Three and Four", zh: "考查第三、四单元内容" }
+    ],
+    questions: [
+      {
+        q: "Why did the student miss the class?",
+        options: ["He was ill", "He visited his grandparents", "He overslept", "He had a football match"],
+        answer: 0,
+        explain: "学生说自己 \"had a bad stomachache\"，因胃疼请假在家。"
+      },
+      {
+        q: "Which two ways of catching up does the teacher mention?",
+        options: ["Extra lessons and a new textbook", "Maria's notes and the class recording", "A study group and the library", "The school website and a video call"],
+        answer: 1,
+        explain: "老师建议抄玛丽亚的笔记，并观看网上的课堂录像。"
+      },
+      {
+        q: "What does Friday's quiz cover?",
+        options: ["Unit Four only", "Units Three and Four", "Units Two and Three", "All the previous units"],
+        answer: 1,
+        explain: "老师说测验 \"covers Units Three and Four\"，范围为第三、四单元。"
+      }
+    ]
+  },
+  {
+    id: "lis-19",
+    title: "Planning a Group Presentation",
+    level: 1,
+    scene: "学术场景",
+    intro: "三名同学讨论小组展示的分工与排练",
+    lines: [
+      { speaker: "Mia", en: "OK, our presentation is next Wednesday. Have we decided who does what?", zh: "好了，我们下周三就要做小组展示。分工定了吗？" },
+      { speaker: "Jack", en: "Not yet. Our topic is recycling in our city, right? Why don't we split it into three parts?", zh: "还没呢。我们的主题是本市的回收利用，对吧？要不分成三部分？" },
+      { speaker: "Mia", en: "Good idea. I'd like to do the introduction and explain why recycling matters.", zh: "好主意。我来负责引言，讲讲回收为什么重要。" },
+      { speaker: "Jack", en: "Then I can talk about what the city is doing now — the new bins and the collection days.", zh: "那我来介绍本市目前的做法——新垃圾桶和回收日。" },
+      { speaker: "Sara", en: "And I'll finish with some suggestions for students. I have some good photos for the slides, too.", zh: "那我最后给同学们提几点建议。我还有一些不错的照片可以放进幻灯片。" },
+      { speaker: "Mia", en: "Perfect. The teacher said eight minutes in total, so how long should each part be?", zh: "太好了。老师说总共八分钟，那每人讲多久？" },
+      { speaker: "Sara", en: "About two or three minutes each. We should practice together so we don't go over time.", zh: "每人两三分钟左右。我们应该一起排练，免得超时。" },
+      { speaker: "Jack", en: "Can we meet at lunch on Monday? There are free study rooms in the library.", zh: "周一午饭时间见怎么样？图书馆有免费的自习室。" },
+      { speaker: "Mia", en: "Works for me. Jack, could you also make the title slide tonight?", zh: "我没问题。杰克，你今晚能顺便把标题页做出来吗？" },
+      { speaker: "Jack", en: "Sure. I'll send the slides to our group chat so you can both check them.", zh: "没问题。我把幻灯片发到群里，你们俩都可以看看。" }
+    ],
+    keyPhrases: [
+      { en: "split... into three parts", zh: "把……分成三部分" },
+      { en: "go over time", zh: "超时" },
+      { en: "study room", zh: "自习室" },
+      { en: "slide", zh: "幻灯片" }
+    ],
+    questions: [
+      {
+        q: "What is the group's presentation topic?",
+        options: ["Air pollution in the city", "Recycling in our city", "Saving water at school", "Traffic safety"],
+        answer: 1,
+        explain: "杰克确认主题是 \"recycling in our city\"（本市的回收利用）。"
+      },
+      {
+        q: "Which part will Jack prepare?",
+        options: ["The introduction", "What the city is doing now", "Suggestions for students", "The conclusion"],
+        answer: 1,
+        explain: "杰克负责介绍 \"what the city is doing now\"，即本市目前的做法。"
+      },
+      {
+        q: "When and where will the group practice?",
+        options: ["After school on Wednesday", "At lunch on Monday in the library", "On Friday evening at Jack's home", "Before class on Tuesday"],
+        answer: 1,
+        explain: "三人约好周一午饭时间在图书馆的自习室排练。"
+      }
+    ]
+  },
+  {
+    id: "lis-20",
+    title: "Local News: A School Wins a Green Award",
+    level: 1,
+    scene: "新闻播报",
+    intro: "关于山丘小学回收项目获奖的本地新闻",
+    lines: [
+      { speaker: "News", en: "Good afternoon. Here is some good news from our local schools.", zh: "下午好，下面是一条来自我们本地学校的好消息。" },
+      { speaker: "News", en: "Hillside Primary School has won this year's Green School Award for its recycling project.", zh: "山丘小学凭借其回收项目获得了今年的\"绿色学校奖\"。" },
+      { speaker: "News", en: "Students started the project two years ago with just four recycling bins.", zh: "学生们两年前发起了这个项目，当时只有四个回收箱。" },
+      { speaker: "News", en: "Now every classroom recycles paper, plastic, and food waste.", zh: "现在每间教室都分类回收纸张、塑料和厨余垃圾。" },
+      { speaker: "News", en: "The students also collect old pens and batteries, and turn empty bottles into plant pots for the school garden.", zh: "学生们还收集旧笔和旧电池，并把空瓶子改造成学校花园里的花盆。" },
+      { speaker: "News", en: "Last year the school cut its waste by more than half.", zh: "去年，这所学校的垃圾总量减少了一半以上。" },
+      { speaker: "News", en: "The school will receive five thousand dollars, and students have voted to spend it on a new vegetable garden.", zh: "学校将获得五千美元奖金，学生们投票决定用它建一个新菜园。" },
+      { speaker: "News", en: "The award ceremony will take place at the city hall next Friday, and everyone is welcome.", zh: "颁奖典礼将于下周五在市政厅举行，欢迎大家参加。" }
+    ],
+    keyPhrases: [
+      { en: "win an award", zh: "获奖" },
+      { en: "food waste", zh: "厨余垃圾" },
+      { en: "cut... by more than half", zh: "把……减少一半以上" },
+      { en: "award ceremony", zh: "颁奖典礼" }
+    ],
+    questions: [
+      {
+        q: "Why did the school win the award?",
+        options: ["For its recycling project", "For a new vegetable garden", "For a science competition", "For planting five hundred trees"],
+        answer: 0,
+        explain: "新闻说学校因 \"its recycling project\"（回收项目）获得绿色学校奖。"
+      },
+      {
+        q: "How much did the school cut its waste last year?",
+        options: ["By a quarter", "By a third", "By more than half", "By ninety percent"],
+        answer: 2,
+        explain: "原文说 \"cut its waste by more than half\"，垃圾总量减少了一半以上。"
+      },
+      {
+        q: "What will the prize money be used for?",
+        options: ["More recycling bins", "A new vegetable garden", "A school trip", "New computers"],
+        answer: 1,
+        explain: "学生们投票决定把奖金用于 \"a new vegetable garden\"（新建菜园）。"
+      }
+    ]
+  }
+  ,
+  {
+    id: "lis-21",
+    title: "Booking a Table for Someone with a Nut Allergy",
+    level: 2,
+    scene: "日常对话",
+    intro: "顾客电话订位并告知同伴坚果过敏",
+    lines: [
+      { speaker: "Host", en: "Good evening, Bella Italia. How can I help you?", zh: "晚上好，这里是 Bella Italia 餐厅，有什么可以帮您？" },
+      { speaker: "Caller", en: "Hi, I'd like to book a table for six this Saturday at seven. Is that possible?", zh: "你好，我想订本周六七点、六个人的桌位，可以吗？" },
+      { speaker: "Host", en: "Let me check our book... Seven o'clock is busy on Saturday, but I have a table for six at seven thirty. Would that suit you?", zh: "我查一下登记簿……周六七点订得很满，但七点半有一张六人桌，您看合适吗？" },
+      { speaker: "Caller", en: "Seven thirty is fine. Actually, one of my friends is allergic to nuts. Do many of your dishes contain nuts?", zh: "七点半可以。对了，我有一位朋友对坚果过敏。你们很多菜里含坚果吗？" },
+      { speaker: "Host", en: "A few of our desserts do, but the kitchen can prepare most dishes without nuts. Just remind your waiter when you order.", zh: "有几道甜点含坚果，但厨房做大多数菜时都可以不放坚果。点餐时提醒服务员一声就行。" },
+      { speaker: "Caller", en: "That's good to know. Could you make a note of the allergy on our booking, please?", zh: "知道这个太好了。麻烦在订单上备注一下过敏信息好吗？" },
+      { speaker: "Host", en: "Done. I've written 'nut allergy' on your reservation. May I have a name for the table?", zh: "已记下。我在您的预订上注明了\"坚果过敏\"。请问订位用什么名字？" },
+      { speaker: "Caller", en: "Under Mr. Liu — L-I-U.", zh: "用刘先生的名字，L-I-U。" },
+      { speaker: "Host", en: "Perfect. We'll hold the table for fifteen minutes, so please try to arrive on time.", zh: "好的。我们会保留桌位十五分钟，请尽量准时到店。" },
+      { speaker: "Caller", en: "No problem. Thank you very much!", zh: "没问题，非常感谢！" }
+    ],
+    keyPhrases: [
+      { en: "book a table", zh: "预订餐位" },
+      { en: "be allergic to", zh: "对……过敏" },
+      { en: "make a note of", zh: "记下，备注" },
+      { en: "hold the table", zh: "保留桌位" }
+    ],
+    questions: [
+      {
+        q: "What time is the table booked for?",
+        options: ["7:00", "7:30", "8:00", "8:30"],
+        answer: 1,
+        explain: "周六七点已订满，最终订的是七点半（seven thirty）的六人桌。"
+      },
+      {
+        q: "What is the friend allergic to?",
+        options: ["Milk", "Seafood", "Nuts", "Eggs"],
+        answer: 2,
+        explain: "顾客说明朋友 \"is allergic to nuts\"（对坚果过敏）。"
+      },
+      {
+        q: "Why should the group arrive on time?",
+        options: ["The kitchen closes at nine", "The restaurant is far away", "The table is only held for fifteen minutes", "The waiter needs to leave early"],
+        answer: 2,
+        explain: "服务员说只保留桌位十五分钟（\"hold the table for fifteen minutes\"），所以要准时。"
+      }
+    ]
+  },
+  {
+    id: "lis-22",
+    title: "Office Hours: Feedback on an Essay Draft",
+    level: 2,
+    scene: "学术场景",
+    intro: "教授就论文草稿向学生反馈修改意见",
+    lines: [
+      { speaker: "Student", en: "Professor Blake, thank you for seeing me. I got my essay draft back, but I'm not sure what to fix.", zh: "布莱克教授，谢谢您抽时间见我。我的论文草稿发回来了，但我不太清楚该改什么。" },
+      { speaker: "Professor", en: "Of course. Overall, your argument is clear, and that's a real strength. The problem is your evidence.", zh: "没问题。总体来看，你的论点清晰，这是真正的优点，问题出在论据上。" },
+      { speaker: "Student", en: "You mean the middle section?", zh: "您是指中间那部分吗？" },
+      { speaker: "Professor", en: "Yes. You make three claims there, but two of them aren't properly supported. Where did your numbers on smartphone use come from?", zh: "是的。你在那一部分提出了三个论断，其中两个缺乏充分的支撑。关于智能手机使用的数据来自哪里？" },
+      { speaker: "Student", en: "From a blog post, I think. I couldn't find the original study.", zh: "我记得来自一篇博客文章，我没找到原始研究。" },
+      { speaker: "Professor", en: "That's exactly the issue. In academic writing, always go back to the source. A blog is fine for ideas, never for data.", zh: "问题正在于此。学术写作一定要追溯到原始出处。博客可以帮你找思路，但绝不能当作数据来源。" },
+      { speaker: "Student", en: "I see. Do I need to change the conclusion as well?", zh: "我明白了。结论部分也需要修改吗？" },
+      { speaker: "Professor", en: "The conclusion follows the evidence, so it will need a small adjustment. And please check the referencing style — I asked for APA format.", zh: "结论要跟着论据走，所以需要小幅调整。另外请检查引用格式——我要求的是 APA 格式。" },
+      { speaker: "Student", en: "APA, got it. When is the final version due?", zh: "APA 格式，明白了。终稿什么时候交？" },
+      { speaker: "Professor", en: "A week from Friday. If you send me the revised draft by Tuesday, I'll take one more look at it.", zh: "下周五交。如果你在周二前把修改稿发给我，我可以再看一遍。" }
+    ],
+    keyPhrases: [
+      { en: "essay draft", zh: "论文草稿" },
+      { en: "claim", zh: "论断，主张" },
+      { en: "go back to the source", zh: "追溯原始出处" },
+      { en: "referencing style", zh: "引用格式" }
+    ],
+    questions: [
+      {
+        q: "What does the professor praise about the essay?",
+        options: ["Its clear argument", "Its long reference list", "Its neat formatting", "Its original data"],
+        answer: 0,
+        explain: "教授说 \"your argument is clear\"，论点清晰是文章的真正优点。"
+      },
+      {
+        q: "What is wrong with the middle section?",
+        options: ["It is too short", "Two claims lack proper support", "It repeats the introduction", "It uses the wrong language"],
+        answer: 1,
+        explain: "教授指出中间部分三个论断中有两个 \"aren't properly supported\"，缺乏充分支撑。"
+      },
+      {
+        q: "What will the professor do if the revised draft arrives by Tuesday?",
+        options: ["Extend the deadline", "Review it once more", "Grade it early", "Check only the references"],
+        answer: 1,
+        explain: "教授承诺周二前收到修改稿的话 \"I'll take one more look\"，会再看一遍。"
+      }
+    ]
+  },
+  {
+    id: "lis-23",
+    title: "Lecture: Coral Reefs Under Threat",
+    level: 2,
+    scene: "学术场景",
+    intro: "教授讲解珊瑚礁的价值与白化威胁",
+    lines: [
+      { speaker: "Professor", en: "Last week we studied open-ocean ecosystems; today we turn to one of the richest habitats on Earth — coral reefs.", zh: "上周我们学习了开阔海域的生态系统；今天我们来看地球上最富饶的栖息地之一——珊瑚礁。" },
+      { speaker: "Professor", en: "Although reefs cover less than one percent of the ocean floor, they support about a quarter of all marine species.", zh: "虽然珊瑚礁覆盖的海床不足百分之一，却支撑着约四分之一的海洋物种。" },
+      { speaker: "Professor", en: "Corals themselves are animals, not rocks or plants. They live together with tiny algae that provide them with food — and with their famous colors.", zh: "珊瑚本身是动物，既不是岩石也不是植物。它们与微小的藻类共生，藻类为它们提供食物，也带来那标志性的色彩。" },
+      { speaker: "Professor", en: "When water temperatures rise, corals expel these algae, and the reef turns white — an event known as bleaching.", zh: "当水温升高时，珊瑚会排出这些藻类，礁体随之变白，这一现象被称为白化。" },
+      { speaker: "Professor", en: "Bleached corals are not dead, but they are starving. If high temperatures last for weeks, large areas of reef can die.", zh: "白化的珊瑚并未死亡，却处于饥饿状态。如果高温持续数周，大片珊瑚礁可能死亡。" },
+      { speaker: "Professor", en: "Australia's Great Barrier Reef, for example, has suffered several mass bleaching events in the past decade.", zh: "例如澳大利亚的大堡礁，过去十年间已多次发生大规模白化。" },
+      { speaker: "Professor", en: "Beyond warming water, reefs also face ocean acidification, destructive fishing methods, and pollution from the land.", zh: "除了海水变暖，珊瑚礁还面临海洋酸化、破坏性捕捞方式以及陆地污染的威胁。" },
+      { speaker: "Professor", en: "Your task this week: choose one reef protection program, research it, and present its methods in our next session.", zh: "本周任务：选择一个珊瑚礁保护项目进行研究，下次课上介绍它的具体做法。" }
+    ],
+    keyPhrases: [
+      { en: "coral reef", zh: "珊瑚礁" },
+      { en: "marine species", zh: "海洋物种" },
+      { en: "bleaching", zh: "（珊瑚）白化" },
+      { en: "ocean acidification", zh: "海洋酸化" }
+    ],
+    questions: [
+      {
+        q: "How much of the ocean floor do coral reefs cover?",
+        options: ["Less than one percent", "About a quarter", "About half", "Nearly all of it"],
+        answer: 0,
+        explain: "讲座说珊瑚礁覆盖海床 \"less than one percent\"，不足百分之一。"
+      },
+      {
+        q: "Why does a bleached coral turn white?",
+        options: ["It loses the algae that give it color", "It is covered by white sand", "It produces a new white shell", "It absorbs too much sunlight"],
+        answer: 0,
+        explain: "水温升高时珊瑚排出共生的藻类，而其颜色正来自这些藻类，因此变白。"
+      },
+      {
+        q: "What are students asked to do this week?",
+        options: ["Write an essay about the Great Barrier Reef", "Draw a map of the world's reefs", "Research and present one reef protection program", "Visit a local aquarium"],
+        answer: 2,
+        explain: "本周任务是选择一个珊瑚礁保护项目进行研究，并在下次课介绍其方法。"
+      }
+    ]
+  },
+  {
+    id: "lis-24",
+    title: "News: Robot Helpers Are Tested in Care Homes",
+    level: 2,
+    scene: "新闻播报",
+    intro: "关于养老院试用助理机器人的科技新闻",
+    lines: [
+      { speaker: "News", en: "Good evening. I'm Sarah Kim with our weekly technology report.", zh: "晚上好，我是莎拉·金，为您带来每周科技报道。" },
+      { speaker: "News", en: "Care homes in three northern cities have started testing small helper robots with their residents.", zh: "北部三个城市的养老院已开始请住户试用小型助理机器人。" },
+      { speaker: "News", en: "The robots, each about the height of a young child, can remind people to take their medicine and call for help in an emergency.", zh: "这种机器人大约有一个小孩那么高，能提醒住户按时吃药，还能在紧急情况下呼救。" },
+      { speaker: "News", en: "They can also play music, read the news aloud, and make video calls to family members.", zh: "它们还能播放音乐、朗读新闻，并与住户的家人进行视频通话。" },
+      { speaker: "News", en: "The eighteen-month project is run by the national health service together with a university engineering team.", zh: "这个为期十八个月的项目由国家医疗服务系统与一所大学的工程团队共同开展。" },
+      { speaker: "News", en: "Early feedback is mixed but hopeful: most residents said the robots made them feel safer at night.", zh: "早期反馈喜忧参半，但令人充满希望：大多数住户表示，机器人在夜里让他们更有安全感。" },
+      { speaker: "News", en: "Some staff, however, worry that the robots may reduce human contact rather than increase it.", zh: "不过，一些工作人员担心，机器人可能会减少而不是增加人与人之间的接触。" },
+      { speaker: "News", en: "Project leaders stress that the robots are designed to support nurses, not to replace them, and a full report is expected next year.", zh: "项目负责人强调，机器人的定位是协助护士而非取代护士，完整评估报告预计明年发布。" }
+    ],
+    keyPhrases: [
+      { en: "care home", zh: "养老院" },
+      { en: "in an emergency", zh: "在紧急情况下" },
+      { en: "video call", zh: "视频通话" },
+      { en: "human contact", zh: "人与人之间的接触" }
+    ],
+    questions: [
+      {
+        q: "What can the robots do, according to the report?",
+        options: ["Cook meals and clean rooms", "Remind residents to take medicine and call for help", "Drive residents to the hospital", "Give injections like nurses"],
+        answer: 1,
+        explain: "机器人能提醒吃药并在紧急情况下呼救，还能播放音乐、朗读新闻和视频通话。"
+      },
+      {
+        q: "How long will the project last?",
+        options: ["Six months", "One year", "Eighteen months", "Two years"],
+        answer: 2,
+        explain: "报道说这是 \"the eighteen-month project\"，为期十八个月。"
+      },
+      {
+        q: "Why are some staff worried?",
+        options: ["The robots are too expensive", "The robots may reduce human contact", "The robots often break down", "The robots speak too loudly"],
+        answer: 1,
+        explain: "一些员工担心机器人 \"may reduce human contact\"，会减少人际接触。"
+      }
+    ]
+  },
+  {
+    id: "lis-25",
+    title: "News: A New Night Train Links Four Capitals",
+    level: 2,
+    scene: "新闻播报",
+    intro: "关于连接四国首都夜间列车的旅游新闻",
+    lines: [
+      { speaker: "News", en: "Good morning. I'm James Holt with today's travel news.", zh: "早上好，我是詹姆斯·霍尔特，为您带来今日旅游新闻。" },
+      { speaker: "News", en: "A new overnight train service linking four European capitals will begin running next month.", zh: "一条连接四个欧洲国家首都的夜间列车新线路将于下个月开通。" },
+      { speaker: "News", en: "The train will leave Paris at seven in the evening and arrive in Vienna just after eight the next morning, with stops in Munich and Prague.", zh: "列车晚七点从巴黎发车，次日早八点刚过抵达维也纳，途中停靠慕尼黑和布拉格。" },
+      { speaker: "News", en: "Passengers can choose between ordinary seats, private sleeping cabins, and shared compartments with four beds.", zh: "旅客可以选择普通座位、独立卧铺包厢，或四床位共享包厢。" },
+      { speaker: "News", en: "A seat costs from thirty-nine euros, while a private cabin for two starts at one hundred and twenty euros.", zh: "座位票三十九欧元起，双人独立包厢一百二十欧元起。" },
+      { speaker: "News", en: "The operator expects the service to attract travelers who want to avoid short flights and long airport waits.", zh: "运营方预计这项服务将吸引那些想避开短途航班和漫长机场候机时间的旅客。" },
+      { speaker: "News", en: "Environmental groups welcomed the news, noting that the train journey produces about one-fifth of the carbon emissions of the equivalent flight.", zh: "环保组织对这一消息表示欢迎，并指出乘坐这趟列车的碳排放约为同等行程航班的五分之一。" },
+      { speaker: "News", en: "Tickets go on sale this Friday on the operator's website, and the first trains are expected to sell out quickly.", zh: "车票本周五起在运营方官网开售，预计首发车次将很快售罄。" }
+    ],
+    keyPhrases: [
+      { en: "overnight train", zh: "夜间列车" },
+      { en: "sleeping cabin", zh: "卧铺包厢" },
+      { en: "carbon emissions", zh: "碳排放" },
+      { en: "go on sale", zh: "开始发售" },
+      { en: "sell out", zh: "售罄" }
+    ],
+    questions: [
+      {
+        q: "Which cities does the new night train connect?",
+        options: ["Paris, Munich, Prague and Vienna", "Paris, Berlin, Prague and Vienna", "Paris, Vienna and Rome", "Munich, Prague and Budapest"],
+        answer: 0,
+        explain: "列车从巴黎出发，经停慕尼黑、布拉格，终点维也纳，连接四座首都城市。"
+      },
+      {
+        q: "How much does an ordinary seat cost?",
+        options: ["From 19 euros", "From 39 euros", "From 90 euros", "From 120 euros"],
+        answer: 1,
+        explain: "普通座位 \"costs from thirty-nine euros\"，三十九欧元起。"
+      },
+      {
+        q: "Why do environmental groups welcome the new service?",
+        options: ["It will reduce car traffic in Paris", "Its carbon emissions are far lower than flying", "It runs completely on solar power", "It is cheaper than traveling by bus"],
+        answer: 1,
+        explain: "环保组织指出列车出行的碳排放约为同等航班的五分之一，远低于飞行。"
+      }
+    ]
+  }
+  ,
+  {
+    id: "lis-26",
+    title: "Asking Your Manager for Flexible Working",
+    level: 3,
+    scene: "日常对话",
+    intro: "员工向经理申请每周两天居家办公",
+    lines: [
+      { speaker: "Employee", en: "Do you have ten minutes? I'd like to talk about my working arrangement.", zh: "您有十分钟吗？我想和您谈谈我的工作安排。" },
+      { speaker: "Manager", en: "Sure, come in. What's on your mind?", zh: "当然，请进。说说你的想法？" },
+      { speaker: "Employee", en: "I'd like to request two days of working from home each week, ideally Tuesdays and Thursdays. My mother now needs more care, and the commute takes me nearly three hours a day.", zh: "我想申请每周两天居家办公，最好是周二和周四。我母亲现在需要更多照顾，而通勤每天要花掉我将近三个小时。" },
+      { speaker: "Manager", en: "I appreciate you being open about this. What about the weekly planning meeting? It's on Tuesday mornings.", zh: "谢谢你这么坦诚。那每周的计划会怎么办？会议在周二上午。" },
+      { speaker: "Employee", en: "I'd attend that by video, and I'd come into the office for any meeting that needs face-to-face discussion.", zh: "那种会我可以视频参加，需要面对面讨论的会议我会到办公室来。" },
+      { speaker: "Manager", en: "And your team? Two of them are new and ask you a lot of questions.", zh: "那你的团队呢？有两个新人经常要请教你问题。" },
+      { speaker: "Employee", en: "I've thought about that. I'd keep a fixed online hour every afternoon, and on office days they would have my full attention.", zh: "这一点我想过了。我每天下午会固定留出一个在线答疑时间，在办公室的日子则全心支持他们。" },
+      { speaker: "Manager", en: "All right. Put the proposal in writing — the days, the hours, and how you'll measure your output — and I'll take it to HR this week.", zh: "好吧。把方案写成书面材料——包括工作日、工时，以及你将如何衡量产出——我本周提交给人力资源部。" },
+      { speaker: "Employee", en: "Thank you. I'll have it on your desk tomorrow morning.", zh: "谢谢您。我明早就把方案放到您桌上。" }
+    ],
+    keyPhrases: [
+      { en: "working arrangement", zh: "工作安排" },
+      { en: "commute", zh: "通勤" },
+      { en: "face-to-face", zh: "面对面的" },
+      { en: "put... in writing", zh: "将……落成书面" },
+      { en: "measure one's output", zh: "衡量工作产出" }
+    ],
+    questions: [
+      {
+        q: "Why does the employee want to work from home?",
+        options: ["To save money on lunches", "To care for her mother and cut a long commute", "To study for a degree", "To avoid her team members"],
+        answer: 1,
+        explain: "员工说明母亲需要更多照顾，且每天通勤近三小时，因此申请居家办公。"
+      },
+      {
+        q: "How will the employee handle the Tuesday meeting?",
+        options: ["Move it to Thursday", "Attend it by video", "Send written notes instead", "Skip it when busy"],
+        answer: 1,
+        explain: "她表示周二例会 \"attend that by video\"，将通过视频参加。"
+      },
+      {
+        q: "What does the manager ask her to do next?",
+        options: ["Start home working immediately", "Transfer to another team", "Submit a written proposal including how her output will be measured", "Contact HR directly herself"],
+        answer: 2,
+        explain: "经理要求她把方案写成书面材料，说明工作日、工时和产出衡量方式，本周由他提交人力资源部。"
+      }
+    ]
+  },
+  {
+    id: "lis-27",
+    title: "Calling the Airline About a Canceled Flight",
+    level: 3,
+    scene: "日常对话",
+    intro: "乘客就被取消的航班致电航空公司改签",
+    lines: [
+      { speaker: "Agent", en: "Airline customer service, Alicia speaking. How can I help?", zh: "航空公司客服，我是艾丽西娅，有什么可以帮您？" },
+      { speaker: "Passenger", en: "Hi. My flight to Lisbon tomorrow morning, flight 742, has just been canceled, and the app only offers a flight on Friday. I need to travel tomorrow.", zh: "你好。我明天上午飞里斯本的 742 航班刚被取消，应用里只提供周五的航班，但我明天就必须出发。" },
+      { speaker: "Agent", en: "I'm sorry about that. Let me look at your booking... I can see it. There is one seat left on tomorrow afternoon's flight at three, though it's in a higher fare class.", zh: "非常抱歉。我查一下您的预订……看到了。明天下午三点的航班还剩一个座位，不过舱位等级较高。" },
+      { speaker: "Passenger", en: "Would I have to pay the difference? The cancellation wasn't my fault.", zh: "差价要我承担吗？航班取消又不是我的过错。" },
+      { speaker: "Agent", en: "In cases like this, rebooking is free. I can move you to the three o'clock flight at no charge.", zh: "这种情况改签是免费的，我可以免费为您改到下午三点的航班。" },
+      { speaker: "Passenger", en: "Please do. And what about my checked luggage? I had already paid for an extra bag.", zh: "那就麻烦您了。我的托运行李呢？我已经付了一件额外行李的费用。" },
+      { speaker: "Agent", en: "Your baggage allowance transfers automatically. And since the cancellation was ours, you're also entitled to a meal voucher — and if the delay exceeds four hours, compensation under air passenger rights.", zh: "您的行李额度会自动转移。另外，由于取消是我方原因，您还有权获得一份餐券；如果延误超过四小时，还可依据航空乘客权益获得赔偿。" },
+      { speaker: "Passenger", en: "Good to know. I'll probably just make the three o'clock, but that's useful information.", zh: "明白了。我多半能赶上三点的航班，不过这些信息很有用。" },
+      { speaker: "Agent", en: "You're all set — your new boarding pass is in the app. Is there anything else I can do for you?", zh: "都为您办好了——新的登机牌已在应用里。还有其他需要帮忙的吗？" }
+    ],
+    keyPhrases: [
+      { en: "canceled flight", zh: "被取消的航班" },
+      { en: "fare class", zh: "舱位等级" },
+      { en: "pay the difference", zh: "支付差价" },
+      { en: "baggage allowance", zh: "行李额度" },
+      { en: "be entitled to", zh: "有权获得" }
+    ],
+    questions: [
+      {
+        q: "What is the passenger's problem?",
+        options: ["His flight was overbooked", "His flight to Lisbon was canceled", "His luggage was lost", "He missed his boarding time"],
+        answer: 1,
+        explain: "乘客的 742 航班（飞里斯本）被取消，而应用里只有周五的航班，他明天必须出发。"
+      },
+      {
+        q: "How does the agent solve the rebooking problem?",
+        options: ["She offers him a free flight on Friday", "She moves him to the three o'clock flight free of charge", "She asks him to pay the difference", "She refunds the ticket completely"],
+        answer: 1,
+        explain: "客服表示这种情况改签免费，将他免费改到下午三点的航班。"
+      },
+      {
+        q: "What extra compensation is the passenger entitled to?",
+        options: ["A hotel room and taxi fare", "A meal voucher and possible compensation for a long delay", "A free return ticket", "Extra loyalty points only"],
+        answer: 1,
+        explain: "客服说明他有权获得餐券；若延误超过四小时，还可依乘客权益获得赔偿。"
+      }
+    ]
+  },
+  {
+    id: "lis-28",
+    title: "Seminar: Who Is Responsible When AI Causes Harm?",
+    level: 3,
+    scene: "学术场景",
+    intro: "研讨课讨论人工智能致害的责任归属",
+    lines: [
+      { speaker: "Professor", en: "Today's seminar tackles a question that courts and companies are grappling with: who is responsible when an AI system causes harm?", zh: "今天的研讨课要探讨一个法庭与企业都在努力应对的问题：当人工智能系统造成损害时，责任由谁承担？" },
+      { speaker: "Student A", en: "Surely the company that deploys the system should bear the responsibility. It profits from the technology, and it chose to use it.", zh: "部署系统的公司当然应该承担责任。它从这项技术中获利，也是它自己选择使用该技术。" },
+      { speaker: "Professor", en: "A straightforward answer. But consider a medical AI that follows all of its training and still misreads a scan. Is the developer liable instead?", zh: "这个回答很直接。但请设想一个医学 AI：它完全按照训练运行，却依然误读了一张扫描片。那是否应由开发方担责？" },
+      { speaker: "Student A", en: "Then perhaps liability should be shared — developers answer for the design, and users answer for the deployment.", zh: "那么责任或许应当分担——设计问题由开发方负责，使用问题由使用方负责。" },
+      { speaker: "Student B", en: "I'd add a third party: the data. If a hiring algorithm discriminates because it learned from biased records, punishing the company alone won't fix the root cause.", zh: "我想加上第三方：数据。如果招聘算法因学习了带有偏见的记录而歧视人，只惩罚公司解决不了根本问题。" },
+      { speaker: "Professor", en: "Interesting — you are describing what lawyers call the accountability gap: harm occurs, but no single actor seems fully responsible.", zh: "很有意思——你们所描述的正是法律界所说的\"问责真空\"：损害发生了，却没有哪一方看起来负全部责任。" },
+      { speaker: "Student B", en: "Some scholars propose mandatory insurance, like car insurance, so that victims are compensated whoever is at fault.", zh: "一些学者提议实行强制保险，类似汽车保险，这样无论谁有过错，受害者都能获得赔偿。" },
+      { speaker: "Student A", en: "That solves compensation but not prevention. We would still lack incentives to test systems properly before release.", zh: "这解决了赔偿问题，却没有解决预防问题。系统发布前的充分测试依然缺乏激励。" },
+      { speaker: "Professor", en: "Exactly — and that tension is your essay question this week: can a single framework deliver both fair compensation and safer design?", zh: "完全正确——这种矛盾正是你们本周的论文题：单一的框架能否同时实现公平赔偿与更安全的设计？" }
+    ],
+    keyPhrases: [
+      { en: "bear the responsibility", zh: "承担责任" },
+      { en: "liable", zh: "负法律责任的" },
+      { en: "accountability gap", zh: "问责真空" },
+      { en: "at fault", zh: "有过错" },
+      { en: "incentive", zh: "激励" }
+    ],
+    questions: [
+      {
+        q: "What is the central question of the seminar?",
+        options: ["Whether AI should be banned", "Who is responsible when an AI system causes harm", "How AI systems are trained", "Whether AI can think like humans"],
+        answer: 1,
+        explain: "研讨课的核心问题是 AI 系统造成损害时的责任归属。"
+      },
+      {
+        q: "What point does Student B make about biased data?",
+        options: ["It is the users' problem only", "Punishing companies alone will not fix the root cause", "Data bias no longer exists", "Developers should collect no data at all"],
+        answer: 1,
+        explain: "学生 B 认为算法歧视的根源在于有偏见的数据，只惩罚公司无法解决根本问题。"
+      },
+      {
+        q: "What is this week's essay question about?",
+        options: ["Insurance prices for cars", "Whether one framework can achieve both compensation and prevention", "The history of AI law", "How to build a medical AI"],
+        answer: 1,
+        explain: "论文题探讨单一框架能否同时实现公平赔偿与更安全的设计（即赔偿与预防）。"
+      }
+    ]
+  },
+  {
+    id: "lis-29",
+    title: "News: Solar Power Hits a Record High",
+    level: 3,
+    scene: "新闻播报",
+    intro: "关于太阳能发电创纪录的财经与环境新闻",
+    lines: [
+      { speaker: "News", en: "Good evening. I'm Maria Santos with the business and environment report.", zh: "晚上好，我是玛丽亚·桑托斯，为您带来财经与环境报道。" },
+      { speaker: "News", en: "Solar energy generated a record twelve percent of the nation's electricity last year, according to figures published on Monday.", zh: "周一公布的数据显示，去年太阳能发电占全国总发电量的百分之十二，创下历史纪录。" },
+      { speaker: "News", en: "The figure has doubled in four years, driven mainly by falling prices: solar panels now cost less than half as much as they did in 2020.", zh: "这一数字四年间翻了一番，主要驱动力是价格下降：太阳能电池板现在的成本不到 2020 年的一半。" },
+      { speaker: "News", en: "For the first time, the energy agency said, building a new solar farm is cheaper than running an existing coal plant.", zh: "能源署表示，新建太阳能电站的成本首次低于维持一座现有燃煤电厂运行的成本。" },
+      { speaker: "News", en: "Growth is fastest in rural areas, where farmers earn a second income by renting field space to solar companies.", zh: "农村地区增长最快，那里的农民把田地租给太阳能公司，从而获得第二份收入。" },
+      { speaker: "News", en: "However, the report warns that the grid cannot yet store enough energy for windless, cloudy winter days.", zh: "不过，报告警告说，电网在无风多云的冬日尚未能储备足够的电能。" },
+      { speaker: "News", en: "The government has promised new investment in battery storage and says no region will face power shortages this winter.", zh: "政府已承诺对电池储能进行新的投资，并表示今年冬天任何地区都不会面临电力短缺。" },
+      { speaker: "News", en: "Analysts remain divided, however, on whether the 2030 target of thirty percent solar power is realistic.", zh: "不过，对于 2030 年太阳能占比达到百分之三十的目标是否现实，分析人士仍有分歧。" }
+    ],
+    keyPhrases: [
+      { en: "generate electricity", zh: "发电" },
+      { en: "solar panel", zh: "太阳能电池板" },
+      { en: "battery storage", zh: "电池储能" },
+      { en: "power shortage", zh: "电力短缺" }
+    ],
+    questions: [
+      {
+        q: "What percentage of the nation's electricity came from solar power last year?",
+        options: ["Six percent", "Twelve percent", "Twenty percent", "Thirty percent"],
+        answer: 1,
+        explain: "数据显示去年太阳能发电占比为百分之十二，创历史纪录。"
+      },
+      {
+        q: "Why is solar energy growing so quickly?",
+        options: ["Because of new government taxes", "Because panel prices have fallen sharply", "Because coal plants closed overnight", "Because last winter was unusually warm"],
+        answer: 1,
+        explain: "报道说增长主要由价格下降驱动，电池板成本不到 2020 年的一半。"
+      },
+      {
+        q: "What problem does the report warn about?",
+        options: ["Solar panels are hard to recycle", "The grid cannot store enough energy for cloudy winter days", "Farmers refuse to rent their fields", "There are not enough trained engineers"],
+        answer: 1,
+        explain: "报告警告电网在无风多云的冬天无法储备足够电能。"
+      }
+    ]
+  },
+  {
+    id: "lis-30",
+    title: "News: Ancient Shipwreck Found Off the Southern Coast",
+    level: 3,
+    scene: "新闻播报",
+    intro: "关于发现两千多年前古代沉船的文化新闻",
+    lines: [
+      { speaker: "News", en: "Good evening. I'm Peter Nolan with today's culture report.", zh: "晚上好，我是彼得·诺兰，为您带来今日文化报道。" },
+      { speaker: "News", en: "Fishermen off the southern coast discovered an ancient shipwreck last month, and archaeologists have now confirmed its age.", zh: "南部海岸的渔民上个月发现了一艘古代沉船，考古学家现已确认其年代。" },
+      { speaker: "News", en: "Carbon dating shows that the merchant ship sank about two thousand three hundred years ago, making it the oldest wreck ever found in these waters.", zh: "碳测年显示，这艘商船约沉没于两千三百年前，是这片海域迄今发现的最古老沉船。" },
+      { speaker: "News", en: "Divers have recovered more than two hundred objects, including pottery jars, bronze coins, and tools used for trading.", zh: "潜水员已打捞出二百多件物品，包括陶罐、青铜钱币和用于贸易的工具。" },
+      { speaker: "News", en: "The most surprising find was a collection of seeds, perfectly preserved in the mud, from a plant previously unknown in this region.", zh: "最令人惊讶的发现是一批在淤泥中保存完好的种子，属于一种此前在该地区从未见过的植物。" },
+      { speaker: "News", en: "Dr. Elena Reyes, who leads the excavation, said the wreck proves that ancient traders sailed much farther than historians once believed.", zh: "主持此次发掘的埃莱娜·雷耶斯博士表示，这艘沉船证明古代商人的航行距离远超历史学家以往的想象。" },
+      { speaker: "News", en: "The objects will go on display at the National Museum in March, alongside a full-sized model of the ship.", zh: "这些文物将于三月起在国家博物馆展出，同时展出的还有一艘原尺寸的船只模型。" },
+      { speaker: "News", en: "The site itself will remain underwater and will be protected as an underwater heritage area, officials said.", zh: "官员表示，沉船遗址本身将留在水下，并作为水下遗产区加以保护。" }
+    ],
+    keyPhrases: [
+      { en: "shipwreck", zh: "沉船" },
+      { en: "carbon dating", zh: "碳测年" },
+      { en: "excavation", zh: "考古发掘" },
+      { en: "preserved", zh: "被保存完好的" },
+      { en: "heritage area", zh: "遗产区" }
+    ],
+    questions: [
+      {
+        q: "How was the shipwreck first discovered?",
+        options: ["By a research submarine", "By fishermen", "By museum divers", "By satellite images"],
+        answer: 1,
+        explain: "是南部海岸的渔民（fishermen）最先发现了这艘古代沉船。"
+      },
+      {
+        q: "According to Dr. Reyes, what does the wreck prove?",
+        options: ["Ancient ships were very small", "Ancient traders sailed much farther than historians once believed", "This region once had no trade", "The seeds came from a nearby island"],
+        answer: 1,
+        explain: "雷耶斯博士认为沉船证明古代商人的航行距离远超以往的历史认知。"
+      },
+      {
+        q: "What will happen to the site itself?",
+        options: ["It will be drained and dug up", "It will be moved into the museum", "It will stay underwater as a protected heritage area", "It will open for tourist diving next year"],
+        answer: 2,
+        explain: "遗址将留在水下，并作为水下遗产区受到保护。"
       }
     ]
   }

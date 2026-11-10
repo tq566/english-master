@@ -22,7 +22,7 @@ function toast(msg, ms) {
 /* ---------------- 数据持久化 ---------------- */
 const STORE_KEY = 'ela_state_v1';
 const DEFAULT_STATE = () => ({
-  settings: { pushCount: 5, pushInterval: 30, autoPush: false, levels: ['CET4', 'CET6', 'IELTS'], rate: 1, loop: 1, hideZh: false },
+  settings: { pushCount: 5, pushInterval: 30, autoPush: false, levels: ['GAOKAO', 'CET4', 'CET6', 'IELTS'], rate: 1, loop: 1, hideZh: false },
   words: { pushed: {}, custom: [], lastPushAt: 0 },
   listening: { done: {} },            // id -> {modes:{extensive:{score,at},intensive:{at},dictation:{best,at}}, wrong:[qIdx]}
   grammar: { done: {}, wrongByTopic: {}, wrongList: [] }, // id -> {best,at}; wrongList: {id,exIdx,at}
@@ -446,7 +446,7 @@ function dictationAvg() {
 let ocrBusy = false;
 function renderWords() {
   const st = S.settings;
-  const lvChips = ['CET4', 'CET6', 'IELTS'].map(l =>
+  const lvChips = ['GAOKAO', 'CET4', 'CET6', 'IELTS'].map(l =>
     `<span class="chip ${st.levels.includes(l) ? 'active' : ''}" data-lv="${l}">${l}</span>`).join('');
   const batch = (S.words.queue || []).map(w => w).filter(Boolean);
   const weakList = Object.entries(S.words.pushed).filter(([, v]) => v.result && v.result !== 'known');
@@ -455,7 +455,7 @@ function renderWords() {
   $('#main').innerHTML = `
     <div class="card">
       <div class="card-title">⚙️ 推送设置</div>
-      <label class="field"><span class="lab">选词范围（可多选，四六级 → 雅思 6-7 分）</span>
+      <label class="field"><span class="lab">选词范围（可多选，高考 → 四六级 → 雅思）</span>
         <div class="chips" id="lv-chips">${lvChips}</div></label>
       <div style="display:flex;gap:10px">
         <label class="field" style="flex:1"><span class="lab">每次推送数量 n</span>
@@ -610,7 +610,7 @@ function wordCardHTML(word, ctx) {
     <div class="word-head">
       <span class="w">${esc(item.word)}</span>
       <span class="pos">${esc(item.pos)}</span>
-      <span class="badge ${item.level === 'CET4' ? 'green' : item.level === 'CET6' ? 'blue' : 'orange'}">${item.level}</span>
+      <span class="badge ${item.level === 'GAOKAO' ? 'red' : item.level === 'CET4' ? 'green' : item.level === 'CET6' ? 'blue' : 'orange'}">${item.level}</span>
       <span style="flex:1"></span>
       <button class="speak-btn" data-speak-all="${esc(item.word)}" title="朗读单词和全部例句">▶</button>
       <button class="speak-btn" data-speak="${esc(item.word)}" data-accent="uk" title="英式发音">🇬🇧</button>
