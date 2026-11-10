@@ -227,6 +227,9 @@ details.fold .fold-body { padding: 0 13px 13px; font-size: 13.5px; line-height: 
 
 /* 隐藏中文释义模式（口语训练） */
 body.no-zh .zh-def, body.no-zh .zh, body.no-zh .zh-line { display: none !important; }
+#zh-toggle { border: none; cursor: pointer; font-weight: 700; letter-spacing: 1px; }
+#zh-toggle.on { background: #fff; color: #1a3fcc; }
+#zh-toggle.off { background: rgba(0, 0, 0, .45); color: #ffe1a8; }
 
 @media (max-width: 420px) {
   html { font-size: 14px; }

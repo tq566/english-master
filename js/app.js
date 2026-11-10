@@ -76,6 +76,11 @@ function speak(text, opts) {
   const v = pickVoice(); if (v) u.voice = v;
   if (opts.onend) u.onend = opts.onend;
   if (opts.onerr) u.onerror = opts.onerr;
+  else u.onerror = (e) => {
+    const err = (e && e.error) || '';
+    if (err && err !== 'interrupted' && err !== 'canceled' && err !== 'not-allowed')
+      toast('语音播放失败：请检查设备音量，建议使用 Chrome/Edge/Safari 浏览器');
+  };
   speechSynthesis.speak(u);
 }
 // 顺序朗读多句（精听/泛听整篇/磨耳朵），opts.loop: 循环次数，'inf'=无限循环
@@ -734,7 +739,7 @@ function listeningIntensive(item) {
         const d = S.listening.done[item.id] || { modes: {} };
         d.modes = d.modes || {}; d.modes.intensive = { at: Date.now() };
         S.listening.done[item.id] = d; save(); logActivity();
-        toast('精听完成 ✅ 已记录学习进度'); location.hash = '#/listening';
+        toast('精听完成 ✅ 已记录学习进度'); renderListening();
       } else { idx++; render(); speak(item.lines[idx].en, { rate }); }
     };
   };
@@ -777,7 +782,7 @@ function listeningExtensive(item) {
           d.wrong = item.questions.map((q, i) => (quizWrongIdx.has(i) ? i : null)).filter(v => v != null);
           S.listening.done[item.id] = d; save(); logActivity();
         },
-        onExit: () => location.hash = '#/listening'
+        onExit: () => renderListening()
       });
     }
   };
@@ -835,7 +840,7 @@ function listeningDictation(item) {
         const prevBest = d.modes.dictation ? d.modes.dictation.best : 0;
         d.modes.dictation = { best: Math.max(best, prevBest), at: Date.now() };
         S.listening.done[item.id] = d; save(); logActivity();
-        toast(`听写完成！平均得分 ${best}%`); location.hash = '#/listening';
+        toast(`听写完成！平均得分 ${best}%`); renderListening();
       } else { idx++; render(); }
     };
   };
@@ -970,7 +975,7 @@ function grammarQuiz(id) {
       });
       save(); logActivity();
     },
-    onExit: () => { location.hash = '#/grammar'; }
+    onExit: () => renderGrammar()
   });
 }
 
@@ -1041,7 +1046,7 @@ function speakingTopic(id) {
     const d = S.speaking.done[id] || {};
     d.best = Math.max(d.best || 0, best); d.at = Date.now();
     S.speaking.done[id] = d; save(); logActivity();
-    toast(`训练完成！本话题平均 ${best} 分`); location.hash = '#/speaking';
+    toast(`训练完成！本话题平均 ${best} 分`); renderSpeaking();
   };
 }
 function speakEvaluate(t, i) {
@@ -1155,7 +1160,7 @@ function readingPassage(id) {
         d.best = Math.max(d.best || 0, pct); d.at = Date.now();
         S.reading.done[id] = d; save(); logActivity();
       },
-      onExit: () => location.hash = '#/reading'
+      onExit: () => renderReading()
     });
   };
 }
@@ -1271,7 +1276,11 @@ function exportReport() {
 function applyHideZh() {
   document.body.classList.toggle('no-zh', !!S.settings.hideZh);
   const b = $('#zh-toggle');
-  if (b) b.textContent = S.settings.hideZh ? '中:隐' : '中:显';
+  if (b) {
+    b.textContent = S.settings.hideZh ? '中文 关' : '中文 开';
+    b.classList.toggle('off', !!S.settings.hideZh);
+    b.classList.toggle('on', !S.settings.hideZh);
+  }
 }
 function bindZhToggle() {
   const b = $('#zh-toggle'); if (!b) return;
