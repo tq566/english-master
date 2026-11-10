@@ -225,6 +225,9 @@ details.fold .fold-body { padding: 0 13px 13px; font-size: 13.5px; line-height: 
 .ocr-result-word { display: flex; align-items: center; gap: 8px; padding: 8px 10px; background: #f8f9fd; border-radius: 8px; margin-bottom: 6px; font-size: 14px; }
 .ocr-result-word input { width: 16px; height: 16px; }
 
+/* 隐藏中文释义模式（口语训练） */
+body.no-zh .zh-def, body.no-zh .zh, body.no-zh .zh-line { display: none !important; }
+
 @media (max-width: 420px) {
   html { font-size: 14px; }
   .main { padding: 10px 10px calc(var(--tabbar-h) + 20px); }

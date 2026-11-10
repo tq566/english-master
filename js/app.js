@@ -22,7 +22,7 @@ function toast(msg, ms) {
 /* ---------------- 数据持久化 ---------------- */
 const STORE_KEY = 'ela_state_v1';
 const DEFAULT_STATE = () => ({
-  settings: { pushCount: 5, pushInterval: 30, autoPush: false, levels: ['CET4', 'CET6', 'IELTS'], rate: 1 },
+  settings: { pushCount: 5, pushInterval: 30, autoPush: false, levels: ['CET4', 'CET6', 'IELTS'], rate: 1, loop: 1, hideZh: false },
   words: { pushed: {}, custom: [], lastPushAt: 0 },
   listening: { done: {} },            // id -> {modes:{extensive:{score,at},intensive:{at},dictation:{best,at}}, wrong:[qIdx]}
   grammar: { done: {}, wrongByTopic: {}, wrongList: [] }, // id -> {best,at}; wrongList: {id,exIdx,at}
@@ -37,7 +37,9 @@ function load() {
     const raw = localStorage.getItem(STORE_KEY);
     if (!raw) return DEFAULT_STATE();
     const s = JSON.parse(raw);
-    return Object.assign(DEFAULT_STATE(), s);
+    const merged = Object.assign(DEFAULT_STATE(), s);
+    merged.settings = Object.assign(DEFAULT_STATE().settings, s.settings || {});
+    return merged;
   } catch (e) { return DEFAULT_STATE(); }
 }
 function save() { try { localStorage.setItem(STORE_KEY, JSON.stringify(S)); } catch (e) { /* 容量满时静默 */ } }
@@ -76,14 +78,21 @@ function speak(text, opts) {
   if (opts.onerr) u.onerror = opts.onerr;
   speechSynthesis.speak(u);
 }
-// 顺序朗读多句（精听/泛听整篇）
+// 顺序朗读多句（精听/泛听整篇/磨耳朵），opts.loop: 循环次数，'inf'=无限循环
 function speakSeq(items, opts) {
   opts = opts || {};
   stopSpeak();
-  const token = ++playToken; let i = 0;
+  const token = ++playToken; let i = 0, round = 1;
+  const totalRounds = opts.loop === 'inf' ? Infinity : Math.max(1, opts.loop || 1);
   const next = () => {
     if (token !== playToken) return;
-    if (i >= items.length) { opts.onDone && opts.onDone(); return; }
+    if (i >= items.length) {
+      round++;
+      if (round > totalRounds) { opts.onDone && opts.onDone(); return; }
+      i = 0;
+      if (opts.onRound) opts.onRound(round, totalRounds);
+      setTimeout(next, 800); return;
+    }
     opts.onIndex && opts.onIndex(i);
     const u = new SpeechSynthesisUtterance(items[i]);
     u.lang = 'en-US'; u.rate = opts.rate || S.settings.rate || 1;
@@ -154,6 +163,7 @@ const VIEWS = {
 };
 function route() {
   stopSpeak();
+  ambientPlaying = false;
   const hash = location.hash.replace('#/', '') || 'dashboard';
   const [view, param] = hash.split('/');
   const v = VIEWS[view] || VIEWS.dashboard;
@@ -308,6 +318,18 @@ function renderWords() {
     </div>
 
     <div class="card">
+      <div class="card-title">📥 批量导入单词</div>
+      <p class="muted mb8">粘贴含单词的文章/词表文本，或导入 .txt 文件，系统自动提取单词条目、过滤常见虚词并去重，勾选确认后加入我的生词本。</p>
+      <textarea id="import-text" rows="3" placeholder="粘贴英文文本，例如课文、新闻、词表……"></textarea>
+      <input type="file" id="import-file" accept=".txt,text/plain" style="display:none">
+      <div class="btn-row mt8">
+        <button class="btn secondary" id="btn-import-parse">🔍 解析提取</button>
+        <button class="btn ghost" id="btn-import-file">📄 导入 .txt 文件</button>
+      </div>
+      <div id="import-area" class="mt12"></div>
+    </div>
+
+    <div class="card">
       <div class="card-title">📷 拍图识别单词</div>
       <p class="muted mb8">拍摄或选择含英文单词的图片，识别后勾选确认，即可加入学习列表。</p>
       <input type="file" id="ocr-file" accept="image/*" capture="environment" style="display:none">
@@ -318,7 +340,7 @@ function renderWords() {
     </div>
 
     <div class="card">
-      <div class="card-title">🗂 拍图生词本（${S.words.custom.length}）</div>
+      <div class="card-title">🗂 我的生词本（拍图/导入 · ${S.words.custom.length}）</div>
       ${S.words.custom.length ? customWordsHTML() : '<p class="muted">暂无拍图添加的生词。</p>'}
     </div>
 
@@ -350,7 +372,8 @@ function renderWords() {
     else toast('定时推送已停止');
     save(); renderWords();
   };
-  $('#btn-review').onclick = () => {
+  const reviewBtn = $('#btn-review');
+  if (reviewBtn) reviewBtn.onclick = () => {
     const area = $('#words-batch-area');
     const weak = Object.entries(S.words.pushed).filter(([, v]) => v.result && v.result !== 'known');
     if (!weak.length) return;
@@ -361,6 +384,16 @@ function renderWords() {
   $('#btn-ocr').onclick = () => $('#ocr-file').click();
   $('#ocr-file').onchange = e => { if (e.target.files[0]) runOCR(e.target.files[0]); };
   bindCustomWords();
+
+  // 批量导入
+  $('#btn-import-file').onclick = () => $('#import-file').click();
+  $('#import-file').onchange = e => {
+    const f = e.target.files[0]; if (!f) return;
+    const rd = new FileReader();
+    rd.onload = () => { $('#import-text').value = String(rd.result || '').slice(0, 30000); $('#btn-import-parse').click(); };
+    rd.readAsText(f);
+  };
+  $('#btn-import-parse').onclick = renderImportPreview;
 
   const c = $('#set-count'), iv = $('#set-interval');
   c.onchange = () => { S.settings.pushCount = Math.max(1, Math.min(50, +c.value || 5)); c.value = S.settings.pushCount; save(); };
@@ -414,6 +447,7 @@ function wordCardHTML(word, ctx) {
       <span class="pos">${esc(item.pos)}</span>
       <span class="badge ${item.level === 'CET4' ? 'green' : item.level === 'CET6' ? 'blue' : 'orange'}">${item.level}</span>
       <span style="flex:1"></span>
+      <button class="speak-btn" data-speak-all="${esc(item.word)}" title="朗读单词和全部例句">▶</button>
       <button class="speak-btn" data-speak="${esc(item.word)}" data-accent="uk" title="英式发音">🇬🇧</button>
       <button class="speak-btn" data-speak="${esc(item.word)}" data-accent="us" title="美式发音">🇺🇸</button>
     </div>
@@ -424,6 +458,12 @@ function wordCardHTML(word, ctx) {
       <div class="en">${i + 1}. ${esc(ex.en)} <button class="speak-btn" style="width:24px;height:24px;font-size:11px;vertical-align:middle" data-speak="${esc(ex.en)}" data-accent="us">🔊</button></div>
       <div class="zh">${esc(ex.zh)}</div></div>`).join('')}
     <div class="memory-tip">💡 <b>${esc(item.memory.type)}记忆</b>：${esc(item.memory.text)}</div>
+    ${(item.forms || item.syn || item.ant || item.collocs) ? `<details class="fold mt8"><summary>🔗 关联知识点（延伸形态 / 近义 / 反义 / 搭配）</summary><div class="fold-body">
+      ${item.forms && item.forms.length ? `<p class="mb8"><b>延伸形态：</b>${item.forms.map(esc).join('；')}</p>` : ''}
+      ${item.syn && item.syn.length ? `<p class="mb8"><b>近义词：</b>${item.syn.map(s => `<span class="badge blue" style="margin:2px">${esc(s)}</span>`).join(' ')}</p>` : ''}
+      ${item.ant && item.ant.length ? `<p class="mb8"><b>反义词：</b>${item.ant.map(s => `<span class="badge red" style="margin:2px">${esc(s)}</span>`).join(' ')}</p>` : ''}
+      ${item.collocs && item.collocs.length ? `<p class="mb8"><b>常用搭配：</b>${item.collocs.map(c => `<span class="badge green" style="margin:2px">${esc(c)}</span>`).join(' ')}</p>` : ''}
+    </div></details>` : ''}
     <div class="word-actions">
       <button class="btn success" data-mark="known">${ctx === 'review' ? '✅ 已掌握' : '😊 认识'}</button>
       <button class="btn warn" data-mark="fuzzy">🤔 模糊</button>
@@ -435,6 +475,11 @@ function bindWordCards(scope) {
   $$('[data-speak]', scope).forEach(b => b.onclick = () => {
     const text = b.dataset.speak;
     if (b.dataset.accent === 'uk') speakUK(text); else speak(text);
+  });
+  $$('[data-speak-all]', scope).forEach(b => b.onclick = () => {
+    const item = (window.WORD_BANK || []).find(w => w.word === b.dataset.speakAll);
+    if (!item) return;
+    speak(item.word + '. ' + item.examples.map(e => e.en).join(' '), { rate: 0.95 });
   });
   $$('[data-mark]', scope).forEach(b => b.onclick = () => {
     const card = b.closest('.word-card');
@@ -488,7 +533,41 @@ function bindCustomWords() {
   });
 }
 
+/* ---------------- 批量导入：解析预览 + 确认加入 ---------------- */
+function renderImportPreview() {
+  const area = $('#import-area');
+  const raw = $('#import-text').value;
+  const words = extractWords(raw).slice(0, 100);
+  if (!words.length) { area.innerHTML = '<p class="muted">未从文本中提取到有效单词条目，请检查内容。</p>'; return; }
+  area.innerHTML = `<p class="muted mb8">共提取 <b>${words.length}</b> 个候选单词（已过滤虚词并去重），确认要导入的词条：</p>` +
+    words.map(w => {
+      const dup = S.words.custom.some(c => c.word === w) || !!S.words.pushed[w];
+      const inBank = (window.WORD_BANK || []).some(b => b.word.toLowerCase() === w);
+      return `<div class="ocr-result-word">
+        <input type="checkbox" ${dup ? '' : 'checked'} data-imp-w="${esc(w)}" ${dup ? 'disabled' : ''}>
+        <b>${esc(w)}</b>
+        ${dup ? '<span class="badge gray">已在学习列表（自动去重）</span>' : inBank ? '<span class="badge blue">词库命中</span>' : '<span class="badge orange">新词</span>'}
+      </div>`;
+    }).join('') +
+    `<div class="btn-row mt8"><button class="btn" id="import-confirm">✅ 确认导入生词本</button></div>`;
+  $('#import-confirm', area).onclick = () => {
+    const sel = $$('input[data-imp-w]:checked', area).map(cb => cb.dataset.impW);
+    if (!sel.length) return toast('请先勾选要导入的单词');
+    const before = S.words.custom.length;
+    sel.forEach(w => { if (!S.words.custom.some(c => c.word === w)) S.words.custom.push({ word: w, at: Date.now(), mastered: false, from: '导入' }); });
+    save(); logActivity();
+    toast(`已导入 ${S.words.custom.length - before} 个生词（重复项已自动跳过）`);
+    renderWords();
+  };
+}
+
 /* ---------------- 拍图识词 OCR（Tesseract.js 懒加载） ---------------- */
+const STOPWORDS = new Set(['the', 'and', 'for', 'are', 'but', 'not', 'you', 'all', 'any', 'can', 'had', 'her', 'was', 'one', 'our', 'out', 'day', 'get', 'has', 'him', 'his', 'how', 'its', 'new', 'now', 'old', 'see', 'two', 'way', 'who', 'boy', 'did', 'man', 'men', 'put', 'say', 'she', 'too', 'use', 'that', 'this', 'with', 'from', 'they', 'have', 'will', 'been', 'were', 'their', 'would', 'there', 'what', 'about', 'which', 'when', 'your', 'said', 'each', 'over', 'into', 'them', 'then', 'than', 'some', 'time', 'very', 'when', 'come', 'here', 'just', 'like', 'make', 'many', 'more', 'only', 'such', 'take', 'also', 'back', 'after', 'because', 'before', 'could', 'other', 'people', 'these', 'those', 'where', 'which', 'while', 'being', 'every', 'first', 'great', 'group', 'house', 'large', 'little', 'point', 'right', 'small', 'still', 'under', 'water', 'world', 'years', 'years']);
+// 从任意英文文本中提取候选单词条目（去重 + 停用词过滤）
+function extractWords(text) {
+  return [...new Set((String(text || '').match(/[a-zA-Z][a-zA-Z'-]{2,}/g) || []).map(w => w.toLowerCase()))]
+    .filter(w => !STOPWORDS.has(w));
+}
 function loadTesseract() {
   return new Promise((res, rej) => {
     if (window.Tesseract) return res();
@@ -508,9 +587,7 @@ async function runOCR(file) {
     const imgUrl = await new Promise(res => { const r = new FileReader(); r.onload = () => res(r.result); r.readAsDataURL(file); });
     const ret = await Tesseract.recognize(imgUrl, 'eng');
     const text = ret.data.text || '';
-    const STOP = new Set(['the', 'and', 'for', 'are', 'but', 'not', 'you', 'all', 'any', 'can', 'had', 'her', 'was', 'one', 'our', 'out', 'day', 'get', 'has', 'him', 'his', 'how', 'its', 'new', 'now', 'old', 'see', 'two', 'way', 'who', 'boy', 'did', 'man', 'men', 'put', 'say', 'she', 'too', 'use', 'that', 'this', 'with', 'from', 'they', 'have', 'will', 'been', 'were', 'their', 'would', 'there', 'what', 'about', 'which', 'when', 'your', 'said', 'each', 'she', 'over', 'into']);
-    const words = [...new Set((text.match(/[a-zA-Z][a-zA-Z'-]{2,}/g) || []).map(w => w.toLowerCase()))]
-      .filter(w => !STOP.has(w)).slice(0, 30);
+    const words = extractWords(text).slice(0, 30);
     if (!words.length) { area.innerHTML = '<p class="muted">未识别到英文单词，请换一张更清晰的图片重试。</p>'; return; }
     area.innerHTML = `<p class="muted mb8">识别到 ${words.length} 个候选单词，勾选后确认加入：</p>` +
       words.map((w, i) => {
@@ -540,6 +617,28 @@ async function runOCR(file) {
    视图三：听力训练
    ============================================================ */
 let lisFilter = { level: 0, scene: '' }; // 0=全部
+let ambientPlaying = false;
+function updateMediaSession(title) {
+  if (!('mediaSession' in navigator)) return;
+  try {
+    navigator.mediaSession.metadata = new MediaMetadata({ title: title || '磨耳朵播放中', artist: 'English Master', album: '英语听力磨耳朵' });
+    navigator.mediaSession.setActionHandler('stop', () => stopAmbient());
+  } catch (e) { }
+}
+function startAmbient(items) {
+  if (!items || !items.length) return toast('当前筛选条件下没有素材');
+  const lines = [];
+  items.forEach(it => it.lines.forEach(l => lines.push(l.en)));
+  ambientPlaying = true;
+  speakSeq(lines, {
+    rate: S.settings.rate || 1, loop: S.settings.loop === 1 ? 'inf' : S.settings.loop,
+    onIndex: i => updateMediaSession(`磨耳朵中 · ${items.length} 篇素材连播`),
+    onDone: () => { ambientPlaying = false; toast('本轮磨耳朵播放结束'); renderListening(); }
+  });
+  toast(`🌙 磨耳朵开始：${items.length} 篇连播 × ${S.settings.loop === 1 ? '无限' : S.settings.loop} 轮（切页不停播）`);
+  renderListening();
+}
+function stopAmbient() { stopSpeak(); ambientPlaying = false; renderListening(); }
 function renderListening() {
   const bank = window.LISTENING_BANK || [];
   const lvChips = [0, 1, 2, 3].map(l => `<span class="chip ${lisFilter.level === l ? 'active' : ''}" data-lis-lv="${l}">${l === 0 ? '全部难度' : ['/', 'L1 基础', 'L2 进阶', 'L3 高阶'][l]}</span>`).join('');
@@ -554,7 +653,14 @@ function renderListening() {
       <div class="card-title">🎚 难度与场景筛选</div>
       <div class="chips mb8">${lvChips}</div>
       <div class="chips">${scChips}</div>
-      <p class="muted mt8">💡 建议从 L1 开始逐级进阶；已完成内容会自动排到列表底部（学习避重）。</p>
+      <div class="hr"></div>
+      <div class="card-title">🔁 循环播放设置</div>
+      <div class="chips mb8">${[1, 3, 5, 'inf'].map(n => `<span class="chip ${S.settings.loop == n ? 'active' : ''}" data-lis-loop="${n}">${n === 'inf' ? '∞ 无限循环' : '循环 ' + n + ' 次'}</span>`).join('')}</div>
+      <div class="btn-row">
+        <button class="btn ${ambientPlaying ? 'danger' : 'success'}" id="btn-ambient">${ambientPlaying ? '⏹ 停止磨耳朵' : '🌙 磨耳朵模式（连播当前筛选素材）'}</button>
+      </div>
+      <p class="muted mt8">💡 磨耳朵模式按上方循环次数持续播放并显示系统媒体通知（MediaSession）；注意：部分手机浏览器锁屏后会暂停页面语音，建议保持屏幕常亮使用。</p>
+      <p class="muted">已完成内容自动排到列表底部（学习避重）。</p>
     </div>
     ${sorted.length ? sorted.map(it => {
       const d = S.listening.done[it.id];
@@ -573,6 +679,13 @@ function renderListening() {
   `;
   $$('[data-lis-lv]').forEach(c => c.onclick = () => { lisFilter.level = +c.dataset.lisLv; renderListening(); });
   $$('[data-lis-sc]').forEach(c => c.onclick = () => { lisFilter.scene = c.dataset.lisSc; renderListening(); });
+  $$('[data-lis-loop]').forEach(c => c.onclick = () => {
+    const v = c.dataset.lisLoop;
+    S.settings.loop = v === 'inf' ? 'inf' : +v; save(); renderListening();
+    toast(`循环播放已设为：${v === 'inf' ? '无限循环' : '循环 ' + v + ' 次'}`);
+  });
+  const ambBtn = $('#btn-ambient');
+  if (ambBtn) ambBtn.onclick = () => ambientPlaying ? stopAmbient() : startAmbient(sorted);
   $$('[data-lis-mode]').forEach(b => b.onclick = () => {
     const item = bank.find(x => x.id === b.dataset.id);
     if (b.dataset.lisMode === 'intensive') listeningIntensive(item);
@@ -609,7 +722,7 @@ function listeningIntensive(item) {
     $$('#lis-lines .transcript-line').forEach(el => el.onclick = () => { idx = +el.dataset.lisLine; render(); speak(item.lines[idx].en, { rate }); });
     $('#lis-play-all').onclick = () => {
       const rest = item.lines.slice(idx).map(l => l.en);
-      speakSeq(rest, { rate, onIndex: i => { idx = idx; highlightLine(idx + i); } });
+      speakSeq(rest, { rate, loop: S.settings.loop || 1, onIndex: i => { idx = idx; highlightLine(idx + i); } });
     };
     $('#lis-stop').onclick = stopSpeak;
     $('#lis-zh').onclick = () => { hideZh = !hideZh; render(); };
@@ -650,7 +763,7 @@ function listeningExtensive(item) {
           </div></details>
           <button class="btn block mt12" id="lis-go-quiz">进入理解题检测 →</button>
         </div>`;
-      $('#lis-play').onclick = () => speakSeq(item.lines.map(l => l.en), { rate: 1 });
+      $('#lis-play').onclick = () => speakSeq(item.lines.map(l => l.en), { rate: 1, loop: S.settings.loop || 1 });
       $('#lis-stop').onclick = stopSpeak;
       $('#lis-go-quiz').onclick = () => { stopSpeak(); phase = 'quiz'; render(); };
     } else {
@@ -904,7 +1017,7 @@ function speakingTopic(id) {
       <div class="section-label">示范独白（可跟读模仿）</div>
       <div class="speak-sentence">
         <div>${esc(t.model.en)}</div>
-        <div class="muted mt8">${esc(t.model.zh)}</div>
+        <div class="muted zh-line mt8">${esc(t.model.zh)}</div>
         <button class="btn sm secondary mt8" id="spk-model-play">🔊 播放示范</button>
       </div>
       <div class="section-label">跟读句子（5 句，由易到难）</div>
@@ -913,7 +1026,7 @@ function speakingTopic(id) {
           <div><b>${i + 1}.</b> ${esc(s.en)}
             <button class="speak-btn" data-spk-play="${i}" title="播放示范">🔊</button>
             <button class="speak-btn" data-spk-mic="${i}" title="按住说话后自动评分" style="background:var(--danger-light)">🎤</button></div>
-          <div class="muted mt8">${esc(s.zh)}</div>
+          <div class="muted zh-line mt8">${esc(s.zh)}</div>
           <div class="muted">💡 ${esc(s.tip)}</div>
           <div class="mt8" data-spk-result="${i}">${scores[i] != null ? `<span class="badge ${scores[i] >= 85 ? 'green' : scores[i] >= 60 ? 'orange' : 'red'}">上次评测：${scores[i]} 分</span>` : ''}</div>
         </div>`).join('')}</div>
@@ -1155,8 +1268,19 @@ function exportReport() {
 }
 
 /* ---------------- 启动 ---------------- */
+function applyHideZh() {
+  document.body.classList.toggle('no-zh', !!S.settings.hideZh);
+  const b = $('#zh-toggle');
+  if (b) b.textContent = S.settings.hideZh ? '中:隐' : '中:显';
+}
+function bindZhToggle() {
+  const b = $('#zh-toggle'); if (!b) return;
+  b.onclick = () => {
+    S.settings.hideZh = !S.settings.hideZh; save(); applyHideZh();
+    toast(S.settings.hideZh ? '已隐藏中文释义，适合口语/听力强化训练' : '已恢复显示中文释义');
+  };
+}
 document.addEventListener('DOMContentLoaded', () => {
-  updateStreak();
-  route();
+  updateStreak(); applyHideZh(); bindZhToggle(); route();
 });
-if (document.readyState !== 'loading') { updateStreak(); route(); }
+if (document.readyState !== 'loading') { updateStreak(); applyHideZh(); bindZhToggle(); route(); }

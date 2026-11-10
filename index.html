@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="theme-color" content="#2b5cff">
 <title>English Master · 英语五项全能学习</title>
-<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/style.css?v=20261110c">
 </head>
 <body>
 <div id="app">
@@ -18,7 +18,10 @@
         <p class="subtitle" id="view-subtitle">English Master · 五项全能</p>
       </div>
     </div>
-    <div class="streak" id="streak-box" title="连续学习天数">🔥 <b id="streak-num">0</b> 天</div>
+    <div style="display:flex;gap:6px">
+      <button class="streak" id="zh-toggle" title="中文释义显示开关（影响单词卡/听力字幕/口语句子）">中:显</button>
+      <div class="streak" id="streak-box" title="连续学习天数">🔥 <b id="streak-num">0</b> 天</div>
+    </div>
   </header>
 
   <!-- 主内容区 -->
@@ -39,11 +42,11 @@
 <!-- 全局轻提示 -->
 <div id="toast" class="toast"></div>
 
-<script src="js/data-words.js"></script>
-<script src="js/data-listening.js"></script>
-<script src="js/data-grammar.js"></script>
-<script src="js/data-speaking.js"></script>
-<script src="js/data-reading.js"></script>
-<script src="js/app.js"></script>
+<script src="js/data-words.js?v=20261110c"></script>
+<script src="js/data-listening.js?v=20261110c"></script>
+<script src="js/data-grammar.js?v=20261110c"></script>
+<script src="js/data-speaking.js?v=20261110c"></script>
+<script src="js/data-reading.js?v=20261110c"></script>
+<script src="js/app.js?v=20261110c"></script>
 </body>
 </html>
