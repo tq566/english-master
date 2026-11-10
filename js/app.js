@@ -1153,6 +1153,10 @@ function renderSpeaking() {
   const xf = S.settings.xfyun || {};   // 讯飞配置（回填输入框用）
 
   $('#main').innerHTML = `
+    ${/MicroMessenger/i.test(navigator.userAgent) ? `<div class="card" style="border-left:4px solid #e5484d">
+      <div class="card-title">⚠️ 微信内置浏览器提示</div>
+      <p class="muted mb8">当前在微信内打开，微信浏览器不支持语音识别接口（朗读也可能受限）。建议：点右上角「···」→ 选择「在浏览器中打开」（iPhone 请选 <b>Safari</b>），即可获得完整体验：单词/例句朗读 + AI 发音评测。iPhone 的 Safari 走苹果识别服务器，国内可直连。</p>
+    </div>` : ''}
     <div class="card">
       <div class="card-title">🎙 AI 评测引擎设置 ${xfyunConfigured() ? '<span class="badge green">✓ 讯飞已配置 · 优先使用</span>' : '<span class="badge gray">未配置 · 走浏览器识别或自评</span>'}</div>
       <p class="muted mb8">配置「讯飞语音听写」后，口语评测优先走讯飞引擎（国内直连可用）；未配置时自动使用浏览器识别，均失败则降级为自评。密钥仅保存在本机浏览器 localStorage，不会上传到任何服务器。</p>
