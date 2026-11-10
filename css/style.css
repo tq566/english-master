@@ -66,7 +66,7 @@ body {
 .btn-row { display: flex; gap: 8px; flex-wrap: wrap; }
 .btn-row .btn { flex: 1; }
 
-input[type="number"], input[type="text"], select, textarea {
+input[type="number"], input[type="text"], input[type="password"], select, textarea {
   width: 100%; border: 1.5px solid var(--border); border-radius: 10px;
   padding: 10px 12px; font-size: 14px; background: #fff; color: var(--text); outline: none;
 }

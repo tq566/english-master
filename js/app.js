@@ -157,6 +157,163 @@ function recognizeOnce(onResult, onErr) {
   } catch (e) { onErr({ error: 'start-failed' }); return null; }
 }
 
+/* ---------------- 讯飞语音听写（IAT v2 · 国内可选识别引擎） ----------------
+   纯前端直连 wss://iat-api.xfyun.cn/v2/iat，握手签名用浏览器原生 crypto.subtle 实现 HMAC-SHA256（无 npm 依赖）。
+   密钥由用户在「口语练习」页配置，仅存本机 localStorage（S.settings.xfyun = { appid, apiKey, apiSecret }） */
+// 判断讯飞引擎是否已配置齐全
+function xfyunConfigured() {
+  const c = S.settings.xfyun;
+  return !!(c && c.appid && c.apiKey && c.apiSecret);
+}
+// Uint8Array → base64（分片拼接，避免 String.fromCharCode 一次性传入过大数组导致参数超限）
+function bytesToBase64(bytes) {
+  let bin = ''; const CH = 0x8000;
+  for (let i = 0; i < bytes.length; i += CH) bin += String.fromCharCode.apply(null, bytes.subarray(i, Math.min(i + CH, bytes.length)));
+  return btoa(bin);
+}
+// 生成讯飞 IAT 握手签名，返回完整 WebSocket url（纯函数，可脱离浏览器单独测试）
+async function iflySign(date, apiSecret, apiKey) {
+  // 1) 待签名字符串：host / date / 请求行 三行拼接（讯飞官方规范，date 为 RFC1123 格式）
+  const signatureOrigin = `host: iat-api.xfyun.cn\ndate: ${date}\nGET /v2/iat HTTP/1.1`;
+  // 2) HMAC-SHA256 签名后转 base64（crypto.subtle 仅 HTTPS/localhost 可用）
+  const enc = new TextEncoder();
+  const key = await crypto.subtle.importKey('raw', enc.encode(apiSecret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+  const sigBuf = await crypto.subtle.sign('HMAC', key, enc.encode(signatureOrigin));
+  const signature = bytesToBase64(new Uint8Array(sigBuf));
+  // 3) 组装 authorization 描述串并整体 base64
+  const authorizationOrigin = `api_key="${apiKey}", algorithm="hmac-sha256", headers="host date request-line", signature="${signature}"`;
+  const authorization = bytesToBase64(enc.encode(authorizationOrigin));
+  // 4) 拼出完整 wss 地址
+  return `wss://iat-api.xfyun.cn/v2/iat?authorization=${authorization}&date=${encodeURIComponent(date)}&host=iat-api.xfyun.cn`;
+}
+// Float32 采样 → Int16 PCM
+function floatTo16(f32) {
+  const out = new Int16Array(f32.length);
+  for (let i = 0; i < f32.length; i++) {
+    const s = Math.max(-1, Math.min(1, f32[i]));
+    out[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
+  }
+  return out;
+}
+// 线性插值降采样（AudioContext 不支持 16kHz 时，把 44.1k/48k 重采样到 16k）
+function downsample(f32, fromRate, toRate) {
+  if (fromRate === toRate) return f32;
+  const ratio = fromRate / toRate;
+  const len = Math.floor(f32.length / ratio);
+  const out = new Float32Array(len);
+  for (let i = 0; i < len; i++) {
+    const pos = i * ratio, idx = Math.floor(pos), frac = pos - idx;
+    const s0 = f32[idx] || 0, s1 = (idx + 1 < f32.length) ? f32[idx + 1] : s0;
+    out[i] = s0 + (s1 - s0) * frac;
+  }
+  return out;
+}
+// 讯飞语音听写主流程：录音 → 分帧上传 → 拼接识别文本（签名风格与 recognizeOnce 一致：onResult(text) / onErr(err)）
+// opts.maxMs：录音最长毫秒数（默认 6000，测试连接时传 2000）
+function iflyRecognize(onResult, onErr, opts) {
+  opts = opts || {};
+  const MAX_MS = opts.maxMs || 6000;
+  const cfg = S.settings.xfyun || {};
+  // 兜底：crypto.subtle 仅 HTTPS / localhost 可用，缺失时无法完成签名
+  if (!(window.crypto && window.crypto.subtle)) { onErr({ error: 'xfyun', code: 'insecure' }); return null; }
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { onErr({ error: 'unsupported' }); return null; }
+
+  let settled = false;                                    // 成功/失败只触发一次
+  let stream = null, ac = null, proc = null, ws = null;   // 需要统一清理的资源
+  let sendTimer = null, stopTimer = null, guardTimer = null, opened = false;
+  let pcmBuf = new Int16Array(0);                         // 16kHz PCM 待发送缓冲
+  let firstSent = false;                                  // 是否已发送第一帧（携带 common/business 参数）
+  let resultText = '';                                    // 累计识别文本
+
+  // 统一清理：停定时器、断采集、关麦克风、关 AudioContext、关 WebSocket
+  const cleanup = () => {
+    clearInterval(sendTimer); clearTimeout(stopTimer); clearTimeout(guardTimer);
+    try { if (proc) proc.disconnect(); } catch (e) { }
+    try { if (stream) stream.getTracks().forEach(tr => tr.stop()); } catch (e) { }
+    try { if (ac && ac.state !== 'closed') ac.close(); } catch (e) { }
+    try { if (ws && ws.readyState <= 1) ws.close(); } catch (e) { }
+  };
+  const fail = err => { if (settled) return; settled = true; cleanup(); onErr(err); };
+  const done = text => { if (settled) return; settled = true; cleanup(); onResult(text); };
+
+  // 从缓冲取出最多 640 采样（40ms @16kHz = 1280 字节）并转 base64
+  const takeFrame = () => {
+    const n = Math.min(pcmBuf.length, 640);
+    const view = pcmBuf.subarray(0, n);
+    const b64 = bytesToBase64(new Uint8Array(view.buffer, view.byteOffset, view.byteLength));
+    pcmBuf = pcmBuf.slice(n);
+    return b64;
+  };
+  // 组装一帧 IAT 协议消息（status: 0=第一帧 1=中间帧 2=结束帧）
+  const mkFrame = (status, audio) => ({
+    common: { app_id: cfg.appid },
+    business: { language: 'en_us', domain: 'iat', accent: 'en_us', vad_eos: 10000 },
+    data: { status, format: 'audio/L16;rate=16000', encoding: 'raw', audio }
+  });
+  // 录音结束：冲刷缓冲中剩余音频，发送结束帧（status=2 且 audio 为空串）
+  const stopSend = () => {
+    clearInterval(sendTimer); clearTimeout(stopTimer);
+    if (!ws || ws.readyState !== 1 || !firstSent) { fail({ error: 'xfyun', code: 'ws-closed' }); return; }
+    try {
+      while (pcmBuf.length > 0) ws.send(JSON.stringify(mkFrame(1, takeFrame())));
+      ws.send(JSON.stringify(mkFrame(2, '')));
+      // 不主动 close，等服务器返回 status===2 后统一清理；guardTimer 超时兜底
+    } catch (e) { fail({ error: 'xfyun', code: 'ws-send' }); }
+  };
+
+  (async () => {
+    // 1) 生成握手签名 url
+    let url;
+    try { url = await iflySign(new Date().toUTCString(), cfg.apiSecret, cfg.apiKey); }
+    catch (e) { return fail({ error: 'xfyun', code: 'sign-failed' }); }
+    // 2) 请求麦克风权限
+    try { stream = await navigator.mediaDevices.getUserMedia({ audio: true }); }
+    catch (e) { return fail({ error: 'not-allowed' }); }
+    // 3) AudioContext 采集：优先 16kHz 采样率，不支持则用默认采样率并在发送前重采样
+    try { ac = new AudioContext({ sampleRate: 16000 }); }
+    catch (e) { ac = new AudioContext(); }
+    const srcRate = ac.sampleRate;
+    const src = ac.createMediaStreamSource(stream);
+    proc = ac.createScriptProcessor(4096, 1, 1);
+    proc.onaudioprocess = e => {
+      let chunk = e.inputBuffer.getChannelData(0);
+      if (srcRate !== 16000) chunk = downsample(chunk, srcRate, 16000);  // 线性重采样到 16k
+      const pcm = floatTo16(chunk);                                      // Float32 → Int16 PCM
+      const merged = new Int16Array(pcmBuf.length + pcm.length);
+      merged.set(pcmBuf); merged.set(pcm, pcmBuf.length);
+      pcmBuf = merged;
+    };
+    // 4) 打开 WebSocket
+    try { ws = new WebSocket(url); } catch (e) { return fail({ error: 'xfyun', code: 'network' }); }
+    ws.onerror = () => fail({ error: 'xfyun', code: 'network' });
+    ws.onmessage = ev => {
+      let res; try { res = JSON.parse(ev.data); } catch (e) { return; }
+      // 服务端错误码（401 密钥/签名错误、11200 额度用完、403 未开通/签名过期等）
+      if (res.code !== 0) return fail({ error: 'xfyun', code: res.code, message: res.message });
+      // 拼接识别文本：data.result.ws[].cw[].w
+      if (res.data && res.data.result && res.data.result.ws)
+        res.data.result.ws.forEach(seg => (seg.cw || []).forEach(cw => { resultText += cw.w; }));
+      if (res.data && res.data.status === 2) done(resultText.trim());
+    };
+    ws.onopen = () => {
+      opened = true;
+      src.connect(proc); proc.connect(ac.destination);   // 开始采集
+      // 每 40ms 发送一帧：第一帧带 common/business 参数，之后 status=1
+      sendTimer = setInterval(() => {
+        if (!ws || ws.readyState !== 1) return;
+        if (!firstSent) { firstSent = true; ws.send(JSON.stringify(mkFrame(0, takeFrame()))); return; }
+        if (pcmBuf.length >= 640) ws.send(JSON.stringify(mkFrame(1, takeFrame())));
+      }, 40);
+      // 录音最长 MAX_MS 自动停止
+      stopTimer = setTimeout(stopSend, MAX_MS);
+    };
+    // 总兜底：录音时长 + 12 秒内未出结果视为失败（建连失败或服务不可达）
+    guardTimer = setTimeout(() => fail({ error: 'xfyun', code: opened ? 'timeout' : 'network' }), MAX_MS + 12000);
+  })();
+
+  return { abort: () => fail({ error: 'xfyun', code: 'aborted' }) };
+}
+
 /* ============================================================
    路由
    ============================================================ */
@@ -993,8 +1150,27 @@ function renderSpeaking() {
   const items = bank.filter(t => (!spkFilter.level || t.level === spkFilter.level) && (!spkFilter.scene || t.scene === spkFilter.scene));
   const doneIds = Object.keys(S.speaking.done);
   const sorted = items.slice().sort((a, b) => (doneIds.includes(a.id) ? 1 : 0) - (doneIds.includes(b.id) ? 1 : 0));
+  const xf = S.settings.xfyun || {};   // 讯飞配置（回填输入框用）
 
   $('#main').innerHTML = `
+    <div class="card">
+      <div class="card-title">🎙 AI 评测引擎设置 ${xfyunConfigured() ? '<span class="badge green">✓ 讯飞已配置 · 优先使用</span>' : '<span class="badge gray">未配置 · 走浏览器识别或自评</span>'}</div>
+      <p class="muted mb8">配置「讯飞语音听写」后，口语评测优先走讯飞引擎（国内直连可用）；未配置时自动使用浏览器识别，均失败则降级为自评。密钥仅保存在本机浏览器 localStorage，不会上传到任何服务器。</p>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <label class="field" style="flex:1;min-width:150px"><span class="lab">AppID</span>
+          <input type="password" id="xf-appid" value="${esc(xf.appid || '')}" placeholder="讯飞应用 AppID" autocomplete="off"></label>
+        <label class="field" style="flex:1;min-width:150px"><span class="lab">APIKey</span>
+          <input type="password" id="xf-key" value="${esc(xf.apiKey || '')}" placeholder="讯飞应用 APIKey" autocomplete="off"></label>
+        <label class="field" style="flex:1;min-width:150px"><span class="lab">APISecret</span>
+          <input type="password" id="xf-secret" value="${esc(xf.apiSecret || '')}" placeholder="讯飞应用 APISecret" autocomplete="off"></label>
+      </div>
+      <div class="btn-row">
+        <button class="btn success sm" id="xf-save">💾 保存并启用</button>
+        <button class="btn ghost sm" id="xf-clear">🗑 清除</button>
+        <button class="btn secondary sm" id="xf-test">🔧 测试连接</button>
+      </div>
+      <p class="muted mt8">💡 获取方式：打开 console.xfyun.cn 免费注册 → 创建应用 → 领取「语音听写」免费包 → 复制 AppID / APIKey / APISecret 三个参数填入上方输入框。</p>
+    </div>
     ${!SRClass ? `<div class="card"><p class="muted">⚠️ 当前浏览器不支持语音识别（推荐使用 Chrome/Edge 并允许麦克风）。跟读评分功能将降级为「自评模式」。</p></div>` : ''}
     <div class="card">
       <div class="card-title">🎤 话题与难度</div>
@@ -1014,6 +1190,18 @@ function renderSpeaking() {
   $$('[data-spk-lv]').forEach(c => c.onclick = () => { spkFilter.level = +c.dataset.spkLv; renderSpeaking(); });
   $$('[data-spk-sc]').forEach(c => c.onclick = () => { spkFilter.scene = c.dataset.spkSc; renderSpeaking(); });
   $$('[data-spk-go]').forEach(b => b.onclick = () => speakingTopic(b.dataset.spkGo));
+  // 讯飞评测引擎设置卡
+  $('#xf-save').onclick = () => {
+    const appid = $('#xf-appid').value.trim(), apiKey = $('#xf-key').value.trim(), apiSecret = $('#xf-secret').value.trim();
+    if (!appid || !apiKey || !apiSecret) { toast('AppID / APIKey / APISecret 三项均不能为空'); return; }
+    S.settings.xfyun = { appid, apiKey, apiSecret }; save();   // 仅存本机 localStorage
+    toast('✅ 已保存并启用讯飞引擎，口语评测将优先使用'); renderSpeaking();
+  };
+  $('#xf-clear').onclick = () => {
+    delete S.settings.xfyun; save();
+    toast('已清除讯飞配置，恢复浏览器识别 / 自评模式'); renderSpeaking();
+  };
+  $('#xf-test').onclick = () => testXfyunConn($('#xf-test'));
 }
 function speakingTopic(id) {
   const t = (window.SPEAKING_BANK || []).find(x => x.id === id); if (!t) return;
@@ -1066,26 +1254,70 @@ function selfEvalFallback(resEl, t, i, note) {
   const retry = $('[data-sr-retry]', resEl);
   if (retry) retry.onclick = () => { S.speaking.srUnavailable = false; save(); srUnavailable = false; speakEvaluate(t, i); };
 }
+// 两个识别引擎（讯飞 / 浏览器）共用的评测结果渲染 + 计分入库，避免重复代码
+function renderSpeakResult(resEl, t, i, text) {
+  const target = t.sentences[i].en;
+  const score = similarity(target, text);
+  resEl.innerHTML = `<div class="explain-box ${score >= 60 ? 'ok' : 'bad'}">
+      <b>AI 评测：${score} 分</b> ${score >= 85 ? '🏆 发音很棒！' : score >= 60 ? '👍 不错，注意差异词' : '📚 再听一遍示范，逐词模仿'}
+      <div class="mt8 muted">目标：${esc(target)}</div>
+      <div class="muted">识别：${esc(text)}</div>
+      <div>${wordDiff(target, text).filter(d => !d.ok).slice(0, 6).map(d => `<span class="badge red" style="margin:2px">${esc(d.w)}</span>`).join('') || ''}</div>
+    </div>`;
+  saveSpeakScore(t, i, score);
+}
+// 讯飞服务端错误码 → 用户可读提示
+function xfyunErrToast(code) {
+  if (code === 401 || code === '401') toast('❌ 讯飞识别失败（401）：密钥填写错误 / 签名不匹配，请检查 AppID、APIKey、APISecret', 3600);
+  else if (code === 11200) toast('❌ 讯飞识别失败（11200）：免费额度用完，请到 console.xfyun.cn 领取「语音听写」免费包', 3600);
+  else if (code === 403 || code === '403') toast('❌ 讯飞识别失败（403）：服务未开通或签名过期，请确认已领取免费包，并检查系统时间是否准确', 3600);
+  else toast(`❌ 讯飞识别失败（code ${code}）`, 3600);
+}
+// 「测试连接」：录 2 秒音频走一次完整讯飞流程，验证密钥与网络是否可用
+function testXfyunConn(btn) {
+  if (!xfyunConfigured()) { toast('请先填写 AppID / APIKey / APISecret 并保存'); return; }
+  if (!(window.crypto && window.crypto.subtle)) { toast('⚠️ crypto.subtle 不可用：签名需在 HTTPS（或 localhost）环境使用', 3600); return; }
+  const old = btn.textContent;
+  btn.disabled = true; btn.textContent = '测试中…请对着麦克风说英语…';
+  iflyRecognize(text => {
+    btn.disabled = false; btn.textContent = old;
+    toast(`✅ 讯飞连接成功！识别文本：「${text || '（未识别到内容，请检查麦克风）'}」`, 3600);
+  }, err => {
+    btn.disabled = false; btn.textContent = old;
+    const code = err && err.code;
+    if (code === 401 || code === '401') toast('❌ 测试失败（401）：密钥错误 / 签名错误，请核对三个参数', 3600);
+    else if (code === 11200) toast('❌ 测试失败（11200）：免费额度用完，请到 console.xfyun.cn 领取语音听写包', 3600);
+    else if (code === 'insecure') toast('⚠️ 测试失败：crypto.subtle 不可用，需在 HTTPS 环境使用', 3600);
+    else toast(`❌ 测试失败（code ${code}）${err && err.message ? '：' + err.message : ''}`, 3600);
+  }, { maxMs: 2000 });
+}
 function speakEvaluate(t, i) {
   const target = t.sentences[i].en;
   const resEl = $(`[data-spk-result="${i}"]`);
+  // 优先级 1：讯飞引擎已配置且三项齐全 → 优先使用（国内直连可用）
+  if (xfyunConfigured()) {
+    if (!(window.crypto && window.crypto.subtle)) {
+      // 非 HTTPS 环境 crypto.subtle 不可用，无法完成讯飞签名
+      toast('⚠️ 讯飞签名需在 HTTPS（或 localhost）环境使用，本次降级为自评');
+      selfEvalFallback(resEl, t, i, '讯飞引擎需要 HTTPS 环境（crypto.subtle 不可用）');
+      return;
+    }
+    resEl.innerHTML = `<p class="muted">🎙 讯飞引擎聆听中…</p>`;
+    iflyRecognize(text => renderSpeakResult(resEl, t, i, text), err => {
+      if (err.error === 'not-allowed') { resEl.innerHTML = `<p class="muted">❌ 麦克风权限被拒绝，请在浏览器设置中允许麦克风</p>`; return; }
+      xfyunErrToast(err.code);
+      selfEvalFallback(resEl, t, i, '讯飞引擎识别失败');   // 失败降级自评
+    });
+    return;
+  }
+  // 优先级 2：讯飞未配置 → 维持原有浏览器语音识别逻辑
   if (!SRClass || srUnavailable) {
     // 自评模式降级
     selfEvalFallback(resEl, t, i, srUnavailable ? '在线识别服务不可用' : '当前浏览器不支持语音识别');
     return;
   }
   resEl.innerHTML = `<p class="muted">🎙 正在聆听，请清晰朗读目标句子……</p>`;
-  recognizeOnce(text => {
-    const score = similarity(target, text);
-    const cls = score >= 85 ? 'green' : score >= 60 ? 'orange' : 'red';
-    resEl.innerHTML = `<div class="explain-box ${score >= 60 ? 'ok' : 'bad'}">
-      <b>AI 评测：${score} 分</b> ${score >= 85 ? '🏆 发音很棒！' : score >= 60 ? '👍 不错，注意差异词' : '📚 再听一遍示范，逐词模仿'}
-      <div class="mt8 muted">目标：${esc(target)}</div>
-      <div class="muted">识别：${esc(text)}</div>
-      <div>${wordDiff(target, text).filter(d => !d.ok).slice(0, 6).map(d => `<span class="badge red" style="margin:2px">${esc(d.w)}</span>`).join('') || ''}</div>
-    </div>`;
-    saveSpeakScore(t, i, score);
-  }, err => {
+  recognizeOnce(text => renderSpeakResult(resEl, t, i, text), err => {
     if (err.error === 'network' || err.error === 'service-not-allowed') {
       srUnavailable = true; S.speaking.srUnavailable = true; save();
       selfEvalFallback(resEl, t, i, '在线识别服务连接失败（Chrome 语音识别需访问 Google 服务器，国内网络无法直连，与你的网络无关）');
