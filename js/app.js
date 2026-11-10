@@ -67,13 +67,33 @@ function pickVoice() {
     || voices.find(v => /en[-_]US/i.test(v.lang))
     || voices.find(v => /^en/i.test(v.lang)) || null;
 }
+// 选两个不同的英语音色用于对话播报（优先按常见人名特征区分男女），设备音色不足时可能返回同一个
+function pickVoicePair() {
+  if (!voices.length) loadVoices();
+  const en = voices.filter(v => /^en/i.test(v.lang));
+  const fem = /female|samantha|karen|moira|tessa|zira|susan|fiona|victoria|aria|jenny|sonia/i;
+  const male = /male|daniel|alex|fred|david|george|oliver|ryan|guy|thomas/i;
+  const a = en.find(v => fem.test(v.name)) || en[0] || null;
+  const b = en.find(v => male.test(v.name) && v !== a) || en.find(v => v !== a) || null;
+  return [a, b];
+}
+// 把听力句子映射为双角色播报项：第一个出现的说话人 → 音色A，第二个 → 音色B
+function speakerMap(lines) {
+  const m = {}; let n = 0;
+  return lines.map(l => {
+    if (!(l.speaker in m)) m[l.speaker] = n++ % 2;
+    return { text: l.en, sp: m[l.speaker] };
+  });
+}
 function speak(text, opts) {
   opts = opts || {};
   if (!('speechSynthesis' in window)) { toast('当前浏览器不支持语音合成'); return; }
   stopSpeak();
   const u = new SpeechSynthesisUtterance(text);
   u.lang = 'en-US'; u.rate = opts.rate || S.settings.rate || 1; u.pitch = 1;
-  const v = pickVoice(); if (v) u.voice = v;
+  const v = opts.sp != null ? (pickVoicePair()[opts.sp] || pickVoice()) : pickVoice();
+  if (v) u.voice = v;
+  if (opts.sp === 1) u.pitch = 1.15; else if (opts.sp === 0) u.pitch = 0.92;
   if (opts.onend) u.onend = opts.onend;
   if (opts.onerr) u.onerror = opts.onerr;
   else u.onerror = (e) => {
@@ -89,6 +109,7 @@ function speakSeq(items, opts) {
   stopSpeak();
   const token = ++playToken; let i = 0, round = 1;
   const totalRounds = opts.loop === 'inf' ? Infinity : Math.max(1, opts.loop || 1);
+  const pair = opts.dialog ? pickVoicePair() : [pickVoice(), null];
   const next = () => {
     if (token !== playToken) return;
     if (i >= items.length) {
@@ -99,9 +120,13 @@ function speakSeq(items, opts) {
       setTimeout(next, 800); return;
     }
     opts.onIndex && opts.onIndex(i);
-    const u = new SpeechSynthesisUtterance(items[i]);
+    const it = items[i];
+    const text = typeof it === 'string' ? it : it.text;
+    const sp = (typeof it === 'string' || !opts.dialog) ? 0 : (it.sp || 0);
+    const u = new SpeechSynthesisUtterance(text);
     u.lang = 'en-US'; u.rate = opts.rate || S.settings.rate || 1;
-    const v = pickVoice(); if (v) u.voice = v;
+    const v = pair[sp] || pair[0]; if (v) u.voice = v;
+    u.pitch = opts.dialog ? (sp === 1 ? 1.15 : 0.92) : 1;
     u.onend = () => { if (token !== playToken) return; i++; setTimeout(next, 380); };
     u.onerror = () => { if (token !== playToken) return; i++; setTimeout(next, 250); };
     speechSynthesis.speak(u);
@@ -793,10 +818,10 @@ function updateMediaSession(title) {
 function startAmbient(items) {
   if (!items || !items.length) return toast('当前筛选条件下没有素材');
   const lines = [];
-  items.forEach(it => it.lines.forEach(l => lines.push(l.en)));
+  items.forEach(it => it.lines.forEach(l => lines.push(l)));
   ambientPlaying = true;
-  speakSeq(lines, {
-    rate: S.settings.rate || 1, loop: S.settings.loop === 1 ? 'inf' : S.settings.loop,
+  speakSeq(speakerMap(lines), {
+    rate: S.settings.rate || 1, loop: S.settings.loop === 1 ? 'inf' : S.settings.loop, dialog: true,
     onIndex: i => updateMediaSession(`磨耳朵中 · ${items.length} 篇素材连播`),
     onDone: () => { ambientPlaying = false; toast('本轮磨耳朵播放结束'); renderListening(); }
   });
@@ -862,6 +887,8 @@ function renderListening() {
 // —— 精听：逐句播放 + 译文 ——
 function listeningIntensive(item) {
   let idx = 0, hideZh = false, rate = 0.9;
+  // 说话人 → 音色映射（0=A音色 1=B音色），单句重播也保持角色一致
+  const spm = {}; const spOf = l => { if (!(l.speaker in spm)) spm[l.speaker] = Object.keys(spm).length % 2; return spm[l.speaker]; };
   const render = () => {
     $('#main').innerHTML = `
       <div class="card">
@@ -884,27 +911,27 @@ function listeningIntensive(item) {
           <button class="btn" id="lis-next">${idx === item.lines.length - 1 ? '完成精听 ✔' : '下一句 ›'}</button>
         </div>
       </div>`;
-    $$('#lis-lines .transcript-line').forEach(el => el.onclick = () => { idx = +el.dataset.lisLine; render(); speak(item.lines[idx].en, { rate }); });
+    $$('#lis-lines .transcript-line').forEach(el => el.onclick = () => { idx = +el.dataset.lisLine; render(); speak(item.lines[idx].en, { rate, sp: spOf(item.lines[idx]) }); });
     $('#lis-play-all').onclick = () => {
-      const rest = item.lines.slice(idx).map(l => l.en);
-      speakSeq(rest, { rate, loop: S.settings.loop || 1, onIndex: i => { idx = idx; highlightLine(idx + i); } });
+      const rest = speakerMap(item.lines.slice(idx));
+      speakSeq(rest, { rate, loop: S.settings.loop || 1, dialog: true, onIndex: i => { idx = idx; highlightLine(idx + i); } });
     };
     $('#lis-stop').onclick = stopSpeak;
     $('#lis-zh').onclick = () => { hideZh = !hideZh; render(); };
     $('#lis-rate').onclick = () => { rate = rate === 1 ? 0.8 : rate === 0.8 ? 0.9 : 1; render(); };
-    $('#lis-prev').onclick = () => { if (idx > 0) { idx--; render(); speak(item.lines[idx].en, { rate }); } };
-    $('#lis-replay').onclick = () => speak(item.lines[idx].en, { rate });
+    $('#lis-prev').onclick = () => { if (idx > 0) { idx--; render(); speak(item.lines[idx].en, { rate, sp: spOf(item.lines[idx]) }); } };
+    $('#lis-replay').onclick = () => speak(item.lines[idx].en, { rate, sp: spOf(item.lines[idx]) });
     $('#lis-next').onclick = () => {
       if (idx === item.lines.length - 1) {
         const d = S.listening.done[item.id] || { modes: {} };
         d.modes = d.modes || {}; d.modes.intensive = { at: Date.now() };
         S.listening.done[item.id] = d; save(); logActivity();
         toast('精听完成 ✅ 已记录学习进度'); renderListening();
-      } else { idx++; render(); speak(item.lines[idx].en, { rate }); }
+      } else { idx++; render(); speak(item.lines[idx].en, { rate, sp: spOf(item.lines[idx]) }); }
     };
   };
   render();
-  speak(item.lines[idx].en, { rate });
+  speak(item.lines[idx].en, { rate, sp: spOf(item.lines[idx]) });
   function highlightLine(i) {
     $$('#lis-lines .transcript-line').forEach((el, j) => el.classList.toggle('playing', j === i));
   }
@@ -928,7 +955,7 @@ function listeningExtensive(item) {
           </div></details>
           <button class="btn block mt12" id="lis-go-quiz">进入理解题检测 →</button>
         </div>`;
-      $('#lis-play').onclick = () => speakSeq(item.lines.map(l => l.en), { rate: 1, loop: S.settings.loop || 1 });
+      $('#lis-play').onclick = () => speakSeq(speakerMap(item.lines), { rate: 1, loop: S.settings.loop || 1, dialog: true });
       $('#lis-stop').onclick = stopSpeak;
       $('#lis-go-quiz').onclick = () => { stopSpeak(); phase = 'quiz'; render(); };
     } else {
