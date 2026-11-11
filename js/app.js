@@ -67,15 +67,22 @@ function pickVoice() {
     || voices.find(v => /en[-_]US/i.test(v.lang))
     || voices.find(v => /^en/i.test(v.lang)) || null;
 }
-// 选两个不同的英语音色用于对话播报（优先按常见人名特征区分男女），设备音色不足时可能返回同一个
+// 选两个不同的英语音色用于对话播报：优先清晰度高的美音（Samantha/Alex 等），尽量一女一男
 function pickVoicePair() {
   if (!voices.length) loadVoices();
   const en = voices.filter(v => /^en/i.test(v.lang));
-  const fem = /female|samantha|karen|moira|tessa|zira|susan|fiona|victoria|aria|jenny|sonia/i;
-  const male = /male|daniel|alex|fred|david|george|oliver|ryan|guy|thomas/i;
+  const fem = /samantha|aria|jenny|zira|susan|victoria|karen|tessa|moira|fiona|female/i;
+  const malePrefs = [/^alex(?!a)/i, /\bguy\b/i, /\bdavid\b/i, /\bdaniel\b/i, /\bryan\b/i, /\boliver\b/i, /\bthomas\b/i, /\bgeorge\b/i, /\bfred\b/i, /male/i];
   const a = en.find(v => fem.test(v.name)) || en[0] || null;
-  const b = en.find(v => male.test(v.name) && v !== a) || en.find(v => v !== a) || null;
+  let b = null;
+  for (const p of malePrefs) { b = en.find(v => p.test(v.name) && v !== a); if (b) break; }
+  if (!b) b = en.find(v => v !== a) || null;
   return [a, b];
+}
+// 两音色相同时才用音调区分角色；不同音色保持原生音调（更清晰不发糊）
+function pitchFor(pair, sp) {
+  const same = !pair[0] || !pair[1] || pair[0].name === pair[1].name;
+  return same ? (sp === 1 ? 1.12 : 0.94) : 1;
 }
 // 把听力句子映射为双角色播报项：第一个出现的说话人 → 音色A，第二个 → 音色B
 function speakerMap(lines) {
@@ -93,7 +100,7 @@ function speak(text, opts) {
   u.lang = 'en-US'; u.rate = opts.rate || S.settings.rate || 1; u.pitch = 1;
   const v = opts.sp != null ? (pickVoicePair()[opts.sp] || pickVoice()) : pickVoice();
   if (v) u.voice = v;
-  if (opts.sp === 1) u.pitch = 1.15; else if (opts.sp === 0) u.pitch = 0.92;
+  if (opts.sp != null) u.pitch = pitchFor(pickVoicePair(), opts.sp);
   if (opts.onend) u.onend = opts.onend;
   if (opts.onerr) u.onerror = opts.onerr;
   else u.onerror = (e) => {
@@ -126,7 +133,7 @@ function speakSeq(items, opts) {
     const u = new SpeechSynthesisUtterance(text);
     u.lang = 'en-US'; u.rate = opts.rate || S.settings.rate || 1;
     const v = pair[sp] || pair[0]; if (v) u.voice = v;
-    u.pitch = opts.dialog ? (sp === 1 ? 1.15 : 0.92) : 1;
+    u.pitch = opts.dialog ? pitchFor(pair, sp) : 1;
     u.onend = () => { if (token !== playToken) return; i++; setTimeout(next, 380); };
     u.onerror = () => { if (token !== playToken) return; i++; setTimeout(next, 250); };
     speechSynthesis.speak(u);
